@@ -455,6 +455,7 @@ export default function ApiExplorerPage() {
 
   useEffect(() => {
     setDoc(swaggerDoc);
+    console.log(swaggerDoc);
     const byTag = groupOperationsByTag(swaggerDoc);
     setGroups(Array.from(byTag.keys()).sort());
     const first = byTag.keys().next().value;
@@ -492,7 +493,7 @@ export default function ApiExplorerPage() {
         style={contentHeight !== null ? { height: contentHeight } : undefined}
       >
         <aside className="w-44 flex-shrink-0 border-r border-[rgba(255,255,255,0.1)] overflow-auto self-stretch">
-          <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.5)] px-3 py-2 border-b border-[rgba(255,255,255,0.08)]">
+          <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.7)] px-3 py-2 border-b border-[rgba(255,255,255,0.08)]">
             Groups
           </h2>
           <ul className="py-1">
@@ -518,7 +519,7 @@ export default function ApiExplorerPage() {
         </aside>
 
         <aside className="w-72 flex-shrink-0 border-r border-[rgba(255,255,255,0.1)] overflow-auto self-stretch">
-          <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.5)] px-3 py-2 border-b border-[rgba(255,255,255,0.08)]">
+          <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.7)] px-3 py-2 border-b border-[rgba(255,255,255,0.08)]">
             Operations
           </h2>
           <ul className="py-1">
@@ -547,7 +548,7 @@ export default function ApiExplorerPage() {
         </aside>
 
         <main className="flex-1 min-w-0 border-l border-[rgba(255,255,255,0.08)] bg-[#1e1e1e] flex flex-col self-stretch">
-          <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.5)] px-4 py-2 border-b border-[rgba(255,255,255,0.08)]">
+          <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.7)] px-4 py-2 border-b border-[rgba(255,255,255,0.08)]">
             Payload
           </h2>
           <PayloadForm operation={selectedOperation} doc={doc} />
