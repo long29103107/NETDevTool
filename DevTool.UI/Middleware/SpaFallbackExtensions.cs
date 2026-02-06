@@ -182,14 +182,17 @@ public static class SpaFallbackExtensions
         {
             devToolApp.Use(async (context, next) =>
             {
-                // Ensure cache directory exists (e.g. create host wwwroot if missing).
+                // On every access to /_devtool/*, fetch fresh swagger and cache to wwwroot.
                 Directory.CreateDirectory(swaggerCacheDir);
                 var filePath = Path.Combine(swaggerCacheDir, swaggerFileName);
-
-                if (!File.Exists(filePath))
+                try
                 {
                     var swaggerJson = await FetchSwaggerJsonAsync(context.Request, openApiPath);
                     await File.WriteAllTextAsync(filePath, swaggerJson);
+                }
+                catch
+                {
+                    // If fetch fails, continue; existing file may still be served
                 }
 
                 await next(context);

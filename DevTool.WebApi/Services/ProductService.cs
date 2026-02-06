@@ -24,8 +24,8 @@ public class ProductService(IProductRepository repository) : IProductService
         {
             Name = request.Name,
             Description = request.Description,
-            Price = request.Price,
-            Stock = request.Stock,
+            Price = request.Price ?? 0,
+            Stock = request.Stock ?? 0,
             CreatedAt = DateTime.UtcNow
         };
         product = await repository.AddAsync(product, ct);
