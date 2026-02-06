@@ -31,6 +31,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 // API endpoints
 app.MapWeatherEndpoints();

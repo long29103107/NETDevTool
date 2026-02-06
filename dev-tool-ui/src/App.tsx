@@ -1,14 +1,11 @@
 import { Routes, Route } from "react-router-dom";
 import "./index.css";
-import HomePage from "./pages/Home";
-import AboutPage from "./pages/About";
+import ApiExplorerPage from "./pages/ApiExplorer";
 
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/home" element={<HomePage />} />
-      <Route path="/about" element={<AboutPage />} />
+      <Route path="/" element={<ApiExplorerPage />} />
     </Routes>
   );
 }
