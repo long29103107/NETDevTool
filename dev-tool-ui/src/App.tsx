@@ -15,6 +15,10 @@ export function App() {
         limit={3}
         duration={3000}
         expand={true}
+        visibleToasts={3}
+        toastOptions={{
+          className: "toast-animation",
+        }}
       />
     </>
   );

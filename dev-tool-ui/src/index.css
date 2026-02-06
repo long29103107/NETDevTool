@@ -57,10 +57,132 @@ body::before {
   }
 }
 
+/* Toast animations */
+@keyframes toast-slide-in-right {
+  from {
+    transform: translateX(calc(100% + 1rem));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(calc(100% + 1rem));
+    opacity: 0;
+  }
+}
+
+@keyframes toast-scale-in {
+  from {
+    transform: scale(0.8) translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-bounce-in {
+  0% {
+    transform: translateX(calc(100% + 1rem)) scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(-10px) scale(1.05);
+  }
+  70% {
+    transform: translateX(5px) scale(0.95);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.toast-animation {
+  animation: toast-slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Sonner toast container animations */
+[data-sonner-toaster] {
+  pointer-events: none;
+}
+
+[data-sonner-toaster] [data-sonner-toast] {
+  animation: toast-slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+[data-sonner-toaster] [data-sonner-toast]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-removed="true"] {
+  animation: toast-slide-out-right 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+
+/* Progress bar animation */
+[data-sonner-toaster] [data-sonner-toast] [data-progress] {
+  transition: width 0.1s linear;
+}
+
+/* Success toast specific animation */
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  animation: toast-slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Error toast specific animation */
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  animation: toast-bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Loading toast specific animation */
+[data-sonner-toaster] [data-sonner-toast][data-type="loading"] {
+  animation: toast-fade-in 0.3s ease-out;
+}
+
 @media (prefers-reduced-motion) {
   *,
   ::before,
   ::after {
+    animation: none !important;
+  }
+  
+  [data-sonner-toaster] [data-sonner-toast] {
     animation: none !important;
   }
 }
