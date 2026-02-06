@@ -21,7 +21,10 @@ function resolveSchema(
   return s as SchemaObject;
 }
 
-function buildExampleFromSchema(schema: SchemaObject | undefined, doc: OpenApiDoc): unknown {
+function buildExampleFromSchema(
+  schema: SchemaObject | undefined,
+  doc: OpenApiDoc
+): unknown {
   schema = resolveSchema(schema as SchemaObject | { $ref: string }, doc);
   if (!schema) return null;
   if (schema.example !== undefined) return schema.example;
@@ -40,7 +43,10 @@ function buildExampleFromSchema(schema: SchemaObject | undefined, doc: OpenApiDo
     return obj;
   }
   if (schema.type === "array") {
-    const item = resolveSchema(schema.items as SchemaObject | { $ref: string }, doc);
+    const item = resolveSchema(
+      schema.items as SchemaObject | { $ref: string },
+      doc
+    );
     return item ? [buildExampleFromSchema(item, doc)] : [];
   }
   if (schema.type === "string") return "";
@@ -52,7 +58,7 @@ function buildExampleFromSchema(schema: SchemaObject | undefined, doc: OpenApiDo
 function getSchemaType(schema: SchemaObject | undefined): string {
   if (!schema?.type) return "string";
   const t = schema.type;
-  return Array.isArray(t) ? (t.find((x) => x !== "null") ?? "string") : t;
+  return Array.isArray(t) ? t.find((x) => x !== "null") ?? "string" : t;
 }
 
 function TypeBadge({ type }: { type: string }) {
@@ -77,7 +83,10 @@ function PayloadForm({
   const [pathValues, setPathValues] = useState<Record<string, string>>({});
   const [queryValues, setQueryValues] = useState<Record<string, string>>({});
   const [bodyValues, setBodyValues] = useState<Record<string, unknown>>({});
-  const [response, setResponse] = useState<{ status: number; data: string } | null>(null);
+  const [response, setResponse] = useState<{
+    status: number;
+    data: string;
+  } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -87,11 +96,21 @@ function PayloadForm({
     const jsonSchema =
       operation.requestBody?.content?.["application/json"]?.schema ??
       operation.requestBody?.content?.["application/*"]?.schema;
-    const schema = jsonSchema && "$ref" in jsonSchema && jsonSchema.$ref
-      ? (doc.components?.schemas?.[jsonSchema.$ref.split("/").pop() ?? ""] as SchemaObject)
-      : (jsonSchema as SchemaObject | undefined);
-    const exampleBody = buildExampleFromSchema(schema, doc) as Record<string, unknown>;
-    const hasBody = (operation.method === "post" || operation.method === "put" || operation.method === "patch") && schema?.properties;
+    const schema =
+      jsonSchema && "$ref" in jsonSchema && jsonSchema.$ref
+        ? (doc.components?.schemas?.[
+            jsonSchema.$ref.split("/").pop() ?? ""
+          ] as SchemaObject)
+        : (jsonSchema as SchemaObject | undefined);
+    const exampleBody = buildExampleFromSchema(schema, doc) as Record<
+      string,
+      unknown
+    >;
+    const hasBody =
+      (operation.method === "post" ||
+        operation.method === "put" ||
+        operation.method === "patch") &&
+      schema?.properties;
 
     const path: Record<string, string> = {};
     pathParams.forEach((p) => {
@@ -124,15 +143,28 @@ function PayloadForm({
   const jsonSchema =
     operation.requestBody?.content?.["application/json"]?.schema ??
     operation.requestBody?.content?.["application/*"]?.schema;
-  const schema = jsonSchema && "$ref" in jsonSchema && jsonSchema.$ref
-    ? (doc.components?.schemas?.[jsonSchema.$ref.split("/").pop() ?? ""] as SchemaObject)
-    : (jsonSchema as SchemaObject | undefined);
-  const exampleBody = buildExampleFromSchema(schema, doc) as Record<string, unknown>;
+  const schema =
+    jsonSchema && "$ref" in jsonSchema && jsonSchema.$ref
+      ? (doc.components?.schemas?.[
+          jsonSchema.$ref.split("/").pop() ?? ""
+        ] as SchemaObject)
+      : (jsonSchema as SchemaObject | undefined);
+  const exampleBody = buildExampleFromSchema(schema, doc) as Record<
+    string,
+    unknown
+  >;
 
-  const hasBody = (operation.method === "post" || operation.method === "put" || operation.method === "patch") && schema?.properties;
+  const hasBody =
+    (operation.method === "post" ||
+      operation.method === "put" ||
+      operation.method === "patch") &&
+    schema?.properties;
   const bodyKeys = schema?.properties ? Object.keys(schema.properties) : [];
 
-  const baseUrl = (doc.servers?.[0]?.url ?? window.location.origin).replace(/\/$/, "");
+  const baseUrl = (doc.servers?.[0]?.url ?? window.location.origin).replace(
+    /\/$/,
+    ""
+  );
   const buildPath = () => {
     let p = operation.path;
     pathParams.forEach((param) => {
@@ -142,8 +174,15 @@ function PayloadForm({
   };
   const buildQuery = () => {
     const entries = queryParams
-      .filter((q) => queryValues[q.name] !== undefined && queryValues[q.name] !== "")
-      .map((q) => `${encodeURIComponent(q.name)}=${encodeURIComponent(String(queryValues[q.name] ?? ""))}`);
+      .filter(
+        (q) => queryValues[q.name] !== undefined && queryValues[q.name] !== ""
+      )
+      .map(
+        (q) =>
+          `${encodeURIComponent(q.name)}=${encodeURIComponent(
+            String(queryValues[q.name] ?? "")
+          )}`
+      );
     return entries.length ? `?${entries.join("&")}` : "";
   };
 
@@ -158,7 +197,10 @@ function PayloadForm({
       const opts: RequestInit = {
         method: operation.method.toUpperCase(),
         headers: hasBody ? { "Content-Type": "application/json" } : undefined,
-        body: hasBody && bodyKeys.length > 0 ? JSON.stringify(bodyValues) : undefined,
+        body:
+          hasBody && bodyKeys.length > 0
+            ? JSON.stringify(bodyValues)
+            : undefined,
       };
       const res = await fetch(url, opts);
       const text = await res.text();
@@ -184,7 +226,10 @@ function PayloadForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4 overflow-auto flex flex-col">
+    <form
+      onSubmit={handleSubmit}
+      className="p-4 space-y-4 overflow-auto flex flex-col"
+    >
       <div>
         <span className="font-mono font-semibold text-[#646cff] uppercase text-xs mr-2">
           {operation.method}
@@ -192,7 +237,9 @@ function PayloadForm({
         <span className="font-mono text-sm break-all">{operation.path}</span>
       </div>
       {operation.summary && (
-        <p className="text-sm text-[rgba(255,255,255,0.7)]">{operation.summary}</p>
+        <p className="text-sm text-[rgba(255,255,255,0.7)]">
+          {operation.summary}
+        </p>
       )}
 
       {pathParams.length > 0 && (
@@ -204,19 +251,30 @@ function PayloadForm({
             {pathParams.map((p) => {
               const paramType = getSchemaType(p.schema as SchemaObject);
               return (
-              <label key={p.name} className="block">
-                <span className="text-[#646cff] font-mono text-sm mr-2 inline-flex items-center flex-wrap gap-y-1">
-                  {p.name}
-                  {p.required !== false && <span className="text-red-500 ml-0.5">*</span>}
-                  <TypeBadge type={paramType} />
-                </span>
-                <input
-                  type={getSchemaType(p.schema as SchemaObject) === "integer" ? "number" : "text"}
-                  value={pathValues[p.name] ?? ""}
-                  onChange={(e) => setPathValues((prev) => ({ ...prev, [p.name]: e.target.value }))}
-                  className="w-full mt-1.5 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded px-2 py-1.5 text-sm font-mono"
-                />
-              </label>
+                <label key={p.name} className="block">
+                  <span className="text-[#646cff] font-mono text-sm mr-2 inline-flex items-center flex-wrap gap-y-1">
+                    {p.name}
+                    {p.required !== false && (
+                      <span className="text-red-500 ml-0.5">*</span>
+                    )}
+                    <TypeBadge type={paramType} />
+                  </span>
+                  <input
+                    type={
+                      getSchemaType(p.schema as SchemaObject) === "integer"
+                        ? "number"
+                        : "text"
+                    }
+                    value={pathValues[p.name] ?? ""}
+                    onChange={(e) =>
+                      setPathValues((prev) => ({
+                        ...prev,
+                        [p.name]: e.target.value,
+                      }))
+                    }
+                    className="w-full mt-1.5 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded px-2 py-1.5 text-sm font-mono"
+                  />
+                </label>
               );
             })}
           </div>
@@ -232,19 +290,26 @@ function PayloadForm({
             {queryParams.map((p) => {
               const paramType = getSchemaType(p.schema as SchemaObject);
               return (
-              <label key={p.name} className="block">
-                <span className="text-[#646cff] font-mono text-sm mr-2 inline-flex items-center flex-wrap gap-y-1">
-                  {p.name}
-                  {p.required && <span className="text-red-500 ml-0.5">*</span>}
-                  <TypeBadge type={paramType} />
-                </span>
-                <input
-                  type="text"
-                  value={queryValues[p.name] ?? ""}
-                  onChange={(e) => setQueryValues((prev) => ({ ...prev, [p.name]: e.target.value }))}
-                  className="w-full mt-1.5 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded px-2 py-1.5 text-sm font-mono"
-                />
-              </label>
+                <label key={p.name} className="block">
+                  <span className="text-[#646cff] font-mono text-sm mr-2 inline-flex items-center flex-wrap gap-y-1">
+                    {p.name}
+                    {p.required && (
+                      <span className="text-red-500 ml-0.5">*</span>
+                    )}
+                    <TypeBadge type={paramType} />
+                  </span>
+                  <input
+                    type="text"
+                    value={queryValues[p.name] ?? ""}
+                    onChange={(e) =>
+                      setQueryValues((prev) => ({
+                        ...prev,
+                        [p.name]: e.target.value,
+                      }))
+                    }
+                    className="w-full mt-1.5 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded px-2 py-1.5 text-sm font-mono"
+                  />
+                </label>
               );
             })}
           </div>
@@ -256,9 +321,12 @@ function PayloadForm({
           <h4 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] mb-2">
             Request body (payload)
           </h4>
-          <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             {bodyKeys.map((key) => {
-              const prop = resolveSchema(schema.properties![key] as SchemaObject | { $ref: string }, doc) as SchemaObject | undefined;
+              const prop = resolveSchema(
+                schema.properties![key] as SchemaObject | { $ref: string },
+                doc
+              ) as SchemaObject | undefined;
               const type = getSchemaType(prop);
               const val = bodyValues[key];
               const isRequired = schema.required?.includes(key);
@@ -266,7 +334,9 @@ function PayloadForm({
                 <label key={key} className="block">
                   <span className="text-[#646cff] font-mono text-sm mr-2 inline-flex items-center flex-wrap gap-y-1">
                     {key}
-                    {isRequired && <span className="text-red-500 ml-0.5">*</span>}
+                    {isRequired && (
+                      <span className="text-red-500 ml-0.5">*</span>
+                    )}
                     <TypeBadge type={type} />
                   </span>
                   {type === "boolean" ? (
@@ -278,13 +348,24 @@ function PayloadForm({
                     />
                   ) : (
                     <input
-                      type={type === "integer" || type === "number" ? "number" : "text"}
+                      type={
+                        type === "integer" || type === "number"
+                          ? "number"
+                          : "text"
+                      }
                       step={type === "number" ? "any" : undefined}
-                      value={val === undefined || val === null ? "" : String(val)}
+                      value={
+                        val === undefined || val === null ? "" : String(val)
+                      }
                       onChange={(e) => {
                         const v = e.target.value;
-                        if (type === "integer") updateBody(key, v === "" ? undefined : parseInt(v, 10));
-                        else if (type === "number") updateBody(key, v === "" ? undefined : parseFloat(v));
+                        if (type === "integer")
+                          updateBody(
+                            key,
+                            v === "" ? undefined : parseInt(v, 10)
+                          );
+                        else if (type === "number")
+                          updateBody(key, v === "" ? undefined : parseFloat(v));
                         else updateBody(key, v === "" ? undefined : v);
                       }}
                       className="w-full mt-1.5 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded px-2 py-1.5 text-sm font-mono"
@@ -326,7 +407,8 @@ export default function ApiExplorerPage() {
   const [loading, setLoading] = useState(true);
   const [groups, setGroups] = useState<string[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
-  const [selectedOperation, setSelectedOperation] = useState<OperationInfo | null>(null);
+  const [selectedOperation, setSelectedOperation] =
+    useState<OperationInfo | null>(null);
 
   useEffect(() => {
     setDoc(swaggerDoc);
@@ -337,9 +419,10 @@ export default function ApiExplorerPage() {
     setLoading(false);
   }, []);
 
-  const operations = doc && selectedGroup
-    ? groupOperationsByTag(doc).get(selectedGroup) ?? []
-    : [];
+  const operations =
+    doc && selectedGroup
+      ? groupOperationsByTag(doc).get(selectedGroup) ?? []
+      : [];
 
   if (loading) {
     return (
@@ -353,7 +436,9 @@ export default function ApiExplorerPage() {
     <div className="h-screen flex flex-col bg-[#242424]">
       <header className="flex-shrink-0 border-b border-[rgba(255,255,255,0.1)] px-4 py-3">
         <h1 className="text-lg font-semibold">API Explorer</h1>
-        <p className="text-xs text-[rgba(255,255,255,0.5)]">Groups → Operations → Payload</p>
+        <p className="text-xs text-[rgba(255,255,255,0.5)]">
+          Groups → Operations → Payload
+        </p>
       </header>
 
       <div className="flex-1 flex">
@@ -371,7 +456,9 @@ export default function ApiExplorerPage() {
                     setSelectedOperation(null);
                   }}
                   className={`w-full text-left px-3 py-2 text-sm block hover:bg-[rgba(255,255,255,0.06)] ${
-                    selectedGroup === tag ? "bg-[rgba(100,108,255,0.2)] text-[#646cff]" : ""
+                    selectedGroup === tag
+                      ? "bg-[rgba(100,108,255,0.2)] text-[#646cff]"
+                      : ""
                   }`}
                 >
                   {tag}

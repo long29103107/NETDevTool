@@ -2,12 +2,13 @@
 
 @layer base {
   :root {
+    font-size: 20px;
     @apply text-[rgba(255,255,255,0.87)] font-sans w-full;
     background: #1a1a2e;
   }
 
   body {
-    @apply min-w-[800px] min-h-screen relative m-0 w-full flex justify-center;
+    @apply min-w-[1200px] min-h-screen relative m-0 w-full flex justify-center;
   }
 
   /* App container: full or half width, centered */
@@ -16,7 +17,7 @@
   }
 
   #root.width-half {
-    max-width: 70%;
+    max-width: 50%;
   }
 
   #root.width-full {
