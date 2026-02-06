@@ -1,28 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   type OpenApiDoc,
   type OperationInfo,
   type SchemaObject,
   groupOperationsByTag,
 } from "../types/openapi";
-import { useSwaggerDoc } from "../hooks/useSwaggerDoc";
+import { useApiExplorerStore } from "../stores/apiExplorerStore";
 
-function resolveSchema(
+const resolveSchema = (
   s: SchemaObject | { $ref: string } | undefined,
   doc: OpenApiDoc
-): SchemaObject | undefined {
+): SchemaObject | undefined => {
   if (!s) return undefined;
   if ("$ref" in s && s.$ref) {
     const name = s.$ref.split("/").pop();
     return name ? (doc.components?.schemas?.[name] as SchemaObject) : undefined;
   }
   return s as SchemaObject;
-}
+};
 
-function buildExampleFromSchema(
+const buildExampleFromSchema = (
   schema: SchemaObject | undefined,
   doc: OpenApiDoc
-): unknown {
+): unknown => {
   schema = resolveSchema(schema as SchemaObject | { $ref: string }, doc);
   if (!schema) return null;
   if (schema.example !== undefined) return schema.example;
@@ -51,16 +52,16 @@ function buildExampleFromSchema(
   if (schema.type === "integer" || schema.type === "number") return 0;
   if (schema.type === "boolean") return false;
   return null;
-}
+};
 
-function getSchemaType(schema: SchemaObject | undefined): string {
+const getSchemaType = (schema: SchemaObject | undefined): string => {
   if (!schema?.type) return "string";
   const t = schema.type;
   return Array.isArray(t) ? t.find((x) => x !== "null") ?? "string" : t;
-}
+};
 
 /** Swagger UI method colors */
-function getMethodColor(method: string): string {
+const getMethodColor = (method: string): string => {
   const m = method.toLowerCase();
   const colors: Record<string, string> = {
     get: "#61affe",
@@ -72,9 +73,9 @@ function getMethodColor(method: string): string {
     options: "#0d5aa7",
   };
   return colors[m] ?? "#646cff";
-}
+};
 
-function TypeBadge({ type }: { type: string }) {
+const TypeBadge = ({ type }: { type: string }) => {
   const label = type.charAt(0).toUpperCase() + type.slice(1);
   return (
     <span
@@ -84,15 +85,15 @@ function TypeBadge({ type }: { type: string }) {
       {label}
     </span>
   );
-}
+};
 
-function PayloadForm({
+const PayloadForm = ({
   operation,
   doc,
 }: {
   operation: OperationInfo | null;
   doc: OpenApiDoc | null;
-}) {
+}) => {
   const [pathValues, setPathValues] = useState<Record<string, string>>({});
   const [queryValues, setQueryValues] = useState<Record<string, string>>({});
   const [bodyValues, setBodyValues] = useState<Record<string, unknown>>({});
@@ -178,14 +179,14 @@ function PayloadForm({
     /\/$/,
     ""
   );
-  const buildPath = () => {
+  const buildPath = (): string => {
     let p = operation.path;
     pathParams.forEach((param) => {
       p = p.replace(`{${param.name}}`, pathValues[param.name] ?? "");
     });
     return p;
   };
-  const buildQuery = () => {
+  const buildQuery = (): string => {
     const entries = queryParams
       .filter(
         (q) => queryValues[q.name] !== undefined && queryValues[q.name] !== ""
@@ -199,10 +200,11 @@ function PayloadForm({
     return entries.length ? `?${entries.join("&")}` : "";
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setSubmitting(true);
     setResponse(null);
+
     try {
       const path = buildPath();
       const query = buildQuery();
@@ -215,6 +217,10 @@ function PayloadForm({
             ? JSON.stringify(bodyValues)
             : undefined,
       };
+
+      const loadingToast = toast.loading(
+        `Sending ${operation.method.toUpperCase()} request...`
+      );
       const res = await fetch(url, opts);
       const text = await res.text();
       let data = text;
@@ -223,19 +229,40 @@ function PayloadForm({
       } catch {
         // keep raw text
       }
+
       setResponse({ status: res.status, data });
+
+      if (res.ok) {
+        toast.success(`Request successful (${res.status})`, {
+          id: loadingToast,
+          description: `${operation.method.toUpperCase()} ${path}`,
+        });
+      } else {
+        toast.error(`Request failed (${res.status})`, {
+          id: loadingToast,
+          description: `${operation.method.toUpperCase()} ${path}`,
+        });
+      }
     } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Request failed";
       setResponse({
         status: 0,
-        data: err instanceof Error ? err.message : "Request failed",
+        data: errorMessage,
+      });
+      toast.error("Request failed", {
+        description: errorMessage,
       });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const updateBody = (key: string, value: unknown) => {
-    setBodyValues((prev) => ({ ...prev, [key]: value }));
+  const updateBody = (key: string, value: unknown): void => {
+    setBodyValues((prev: Record<string, unknown>) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   return (
@@ -283,7 +310,7 @@ function PayloadForm({
                     }
                     value={pathValues[p.name] ?? ""}
                     onChange={(e) =>
-                      setPathValues((prev) => ({
+                      setPathValues((prev: Record<string, string>) => ({
                         ...prev,
                         [p.name]: e.target.value,
                       }))
@@ -318,7 +345,7 @@ function PayloadForm({
                     type="text"
                     value={queryValues[p.name] ?? ""}
                     onChange={(e) =>
-                      setQueryValues((prev) => ({
+                      setQueryValues((prev: Record<string, string>) => ({
                         ...prev,
                         [p.name]: e.target.value,
                       }))
@@ -416,63 +443,72 @@ function PayloadForm({
       )}
     </form>
   );
-}
+};
 
-export default function ApiExplorerPage() {
-  const { doc, loading, error, replaceWithUrl, resetToDefault } =
-    useSwaggerDoc();
-  const [groups, setGroups] = useState<string[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
-  const [selectedOperation, setSelectedOperation] =
-    useState<OperationInfo | null>(null);
-  const [contentHeight, setContentHeight] = useState<number | null>(null);
-  const [swaggerUrl, setSwaggerUrl] = useState<string>("");
-  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+const ApiExplorerPage = () => {
+  const {
+    doc,
+    loading,
+    error,
+    groups,
+    selectedGroup,
+    selectedOperation,
+    contentHeight,
+    swaggerUrl,
+    isLoadingUrl,
+    initializeDoc,
+    replaceWithUrl,
+    resetToDefault,
+    setSelectedGroup,
+    setSelectedOperation,
+    setContentHeight,
+    setSwaggerUrl,
+  } = useApiExplorerStore();
+
   const contentRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef(0);
   const dragStartHeight = useRef(0);
 
-  const handleResizeStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    dragStartY.current = e.clientY;
-    dragStartHeight.current = contentRef.current?.offsetHeight ?? 0;
-    const onMove = (e2: MouseEvent) => {
-      const dy = e2.clientY - dragStartY.current;
-      const newH = Math.max(100, dragStartHeight.current + dy);
-      setContentHeight(newH);
-    };
-    const onUp = () => {
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-    document.body.style.cursor = "ns-resize";
-    document.body.style.userSelect = "none";
-  }, []);
-
+  // Initialize doc on mount
   useEffect(() => {
-    if (!doc) return;
-    const byTag = groupOperationsByTag(doc);
-    setGroups(Array.from(byTag.keys()).sort());
-    const first = byTag.keys().next().value;
-    if (first) setSelectedGroup(first);
-  }, [doc]);
+    initializeDoc();
+  }, [initializeDoc]);
 
-  const handleLoadFromUrl = async (e: React.FormEvent) => {
+  const handleResizeStart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      dragStartY.current = e.clientY;
+      dragStartHeight.current = contentRef.current?.offsetHeight ?? 0;
+      const onMove = (e2: MouseEvent): void => {
+        const dy = e2.clientY - dragStartY.current;
+        const newH = Math.max(100, dragStartHeight.current + dy);
+        setContentHeight(newH);
+      };
+      const onUp = (): void => {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      };
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+      document.body.style.cursor = "ns-resize";
+      document.body.style.userSelect = "none";
+    },
+    [setContentHeight]
+  );
+
+  const handleLoadFromUrl = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    if (!swaggerUrl.trim()) return;
+    if (!swaggerUrl.trim()) {
+      return;
+    }
 
-    setIsLoadingUrl(true);
     try {
       await replaceWithUrl(swaggerUrl.trim());
       setSwaggerUrl("");
     } catch (err) {
-      // Error is handled by the hook
-    } finally {
-      setIsLoadingUrl(false);
+      console.error(err);
     }
   };
 
@@ -562,10 +598,7 @@ export default function ApiExplorerPage() {
               <li key={tag}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedGroup(tag);
-                    setSelectedOperation(null);
-                  }}
+                  onClick={() => setSelectedGroup(tag)}
                   className={`w-full text-left px-3 py-2 text-sm block hover:bg-[rgba(255,255,255,0.06)] ${
                     selectedGroup === tag
                       ? "bg-[rgba(100,108,255,0.2)] text-[#646cff]"
@@ -624,4 +657,6 @@ export default function ApiExplorerPage() {
       />
     </div>
   );
-}
+};
+
+export default ApiExplorerPage;
