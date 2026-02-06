@@ -17,4 +17,15 @@
       <ProjectReference Include="..\DevTool.UI\DevTool.UI.csproj" />
     </ItemGroup>
 
+    <!-- Copy DevTool UI static files so /_devtool can serve the SPA when running WebApi -->
+    <Target Name="CopyDevToolWwwRoot" AfterTargets="Build">
+      <PropertyGroup>
+        <DevToolUiWwwRoot>$(MSBuildProjectDirectory)\..\DevTool.UI\bin\$(Configuration)\$(TargetFramework)\wwwroot</DevToolUiWwwRoot>
+      </PropertyGroup>
+      <ItemGroup>
+        <DevToolWwwFiles Include="$(DevToolUiWwwRoot)\**\*" Condition="Exists('$(DevToolUiWwwRoot)')" />
+      </ItemGroup>
+      <Copy SourceFiles="@(DevToolWwwFiles)" DestinationFiles="@(DevToolWwwFiles->'$(OutputPath)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" Condition="Exists('$(DevToolUiWwwRoot)')" />
+    </Target>
+
 </Project>

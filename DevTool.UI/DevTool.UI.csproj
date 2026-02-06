@@ -1,9 +1,31 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>DevTool.UI</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Swagger\" />
+    <Folder Include="wwwroot\dev-tool-ui\" />
+  </ItemGroup>
+
+  <!-- Build frontend to dist, then copy bundle into DevTool.UI wwwroot/dev-tool-ui -->
+  <Target Name="BuildFrontend" BeforeTargets="Build">
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+      <FeProjectDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '..', 'dev-tool-ui'))</FeProjectDir>
+      <WwwRootDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'wwwroot', 'dev-tool-ui'))</WwwRootDir>
     </PropertyGroup>
+    <Message Importance="high" Text="Building frontend in $(FeProjectDir)..." />
+    <Exec WorkingDirectory="$(FeProjectDir)" Command="bun run build" IgnoreExitCode="false" />
+    <MakeDir Directories="$(WwwRootDir)" />
+    <Message Importance="high" Text="Copying dist to wwwroot/dev-tool-ui..." />
+    <ItemGroup>
+      <DistFiles Include="$(FeProjectDir)dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DistFiles)" DestinationFiles="@(DistFiles->'$(WwwRootDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

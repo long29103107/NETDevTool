@@ -1,3 +1,4 @@
+using DevTool.UI.Middleware;
 using DevTool.WebApi.Data;
 using DevTool.WebApi.Endpoints;
 using DevTool.WebApi.Repositories;
@@ -31,7 +32,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// API endpoints
 app.MapWeatherEndpoints();
 app.MapProductEndpoints();
+
+app.MapDevToolUi("/_devtool");
 
 app.Run();

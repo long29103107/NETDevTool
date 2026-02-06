@@ -6,11 +6,21 @@
  */
 
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
+
+const basename =
+  typeof window !== "undefined" && window.location.pathname.startsWith("/_devtool")
+    ? "/_devtool"
+    : "/";
 
 function start() {
   const root = createRoot(document.getElementById("root")!);
-  root.render(<App />);
+  root.render(
+    <BrowserRouter basename={basename}>
+      <App />
+    </BrowserRouter>
+  );
 }
 
 if (document.readyState === "loading") {
