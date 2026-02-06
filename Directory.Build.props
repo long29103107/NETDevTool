@@ -1,0 +1,12 @@
+<Project>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>1591</NoWarn>
+        <Configurations>Debug;Release;Staging</Configurations>
+        <PreserveCompilationContext>true</PreserveCompilationContext>
+        <CopyRefAssembliesToPublishDirectory>true</CopyRefAssembliesToPublishDirectory>
+    </PropertyGroup>
+</Project>
