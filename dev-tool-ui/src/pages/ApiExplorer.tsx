@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type OpenApiDoc,
   type OperationInfo,
@@ -409,6 +409,31 @@ export default function ApiExplorerPage() {
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [selectedOperation, setSelectedOperation] =
     useState<OperationInfo | null>(null);
+  const [contentHeight, setContentHeight] = useState<number | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef(0);
+  const dragStartHeight = useRef(0);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragStartY.current = e.clientY;
+    dragStartHeight.current = contentRef.current?.offsetHeight ?? 0;
+    const onMove = (e2: MouseEvent) => {
+      const dy = e2.clientY - dragStartY.current;
+      const newH = Math.max(100, dragStartHeight.current + dy);
+      setContentHeight(newH);
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    document.body.style.cursor = "ns-resize";
+    document.body.style.userSelect = "none";
+  }, []);
 
   useEffect(() => {
     setDoc(swaggerDoc);
@@ -441,8 +466,14 @@ export default function ApiExplorerPage() {
         </p>
       </header>
 
-      <div className="flex-1 flex">
-        <aside className="w-44 flex-shrink-0 border-r border-[rgba(255,255,255,0.1)] overflow-auto">
+      <div
+        ref={contentRef}
+        className={`flex min-h-0 overflow-hidden ${
+          contentHeight === null ? "flex-1" : ""
+        }`}
+        style={contentHeight !== null ? { height: contentHeight } : undefined}
+      >
+        <aside className="w-44 flex-shrink-0 border-r border-[rgba(255,255,255,0.1)] overflow-auto self-stretch">
           <h2 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] px-3 py-2">
             Groups
           </h2>
@@ -468,7 +499,7 @@ export default function ApiExplorerPage() {
           </ul>
         </aside>
 
-        <aside className="w-72 flex-shrink-0 border-r border-[rgba(255,255,255,0.1)] overflow-auto">
+        <aside className="w-72 flex-shrink-0 border-r border-[rgba(255,255,255,0.1)] overflow-auto self-stretch">
           <h2 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] px-3 py-2">
             Operations
           </h2>
@@ -494,13 +525,20 @@ export default function ApiExplorerPage() {
           </ul>
         </aside>
 
-        <main className="flex-1 min-w-0 border-l border-[rgba(255,255,255,0.08)] bg-[#1e1e1e] flex flex-col">
+        <main className="flex-1 min-w-0 border-l border-[rgba(255,255,255,0.08)] bg-[#1e1e1e] flex flex-col self-stretch">
           <h2 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] px-4 py-2 border-b border-[rgba(255,255,255,0.08)]">
             Payload
           </h2>
           <PayloadForm operation={selectedOperation} doc={doc} />
         </main>
       </div>
+      <div
+        role="separator"
+        aria-orientation="horizontal"
+        onMouseDown={handleResizeStart}
+        className="flex-shrink-0 h-1.5 bg-[rgba(255,255,255,0.08)] hover:bg-[#646cff] cursor-ns-resize transition-colors"
+        title="Drag to resize"
+      />
     </div>
   );
 }
