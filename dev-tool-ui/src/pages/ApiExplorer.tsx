@@ -5,9 +5,7 @@ import {
   type SchemaObject,
   groupOperationsByTag,
 } from "../types/openapi";
-import swaggerFromSrc from "../swagger.json";
-
-const swaggerDoc = swaggerFromSrc as unknown as OpenApiDoc;
+import { useSwaggerDoc } from "../hooks/useSwaggerDoc";
 
 function resolveSchema(
   s: SchemaObject | { $ref: string } | undefined,
@@ -421,13 +419,15 @@ function PayloadForm({
 }
 
 export default function ApiExplorerPage() {
-  const [doc, setDoc] = useState<OpenApiDoc | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { doc, loading, error, replaceWithUrl, resetToDefault } =
+    useSwaggerDoc();
   const [groups, setGroups] = useState<string[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [selectedOperation, setSelectedOperation] =
     useState<OperationInfo | null>(null);
   const [contentHeight, setContentHeight] = useState<number | null>(null);
+  const [swaggerUrl, setSwaggerUrl] = useState<string>("");
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef(0);
   const dragStartHeight = useRef(0);
@@ -454,14 +454,27 @@ export default function ApiExplorerPage() {
   }, []);
 
   useEffect(() => {
-    setDoc(swaggerDoc);
-    console.log(swaggerDoc);
-    const byTag = groupOperationsByTag(swaggerDoc);
+    if (!doc) return;
+    const byTag = groupOperationsByTag(doc);
     setGroups(Array.from(byTag.keys()).sort());
     const first = byTag.keys().next().value;
     if (first) setSelectedGroup(first);
-    setLoading(false);
-  }, []);
+  }, [doc]);
+
+  const handleLoadFromUrl = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!swaggerUrl.trim()) return;
+
+    setIsLoadingUrl(true);
+    try {
+      await replaceWithUrl(swaggerUrl.trim());
+      setSwaggerUrl("");
+    } catch (err) {
+      // Error is handled by the hook
+    } finally {
+      setIsLoadingUrl(false);
+    }
+  };
 
   const operations =
     doc && selectedGroup
@@ -476,13 +489,61 @@ export default function ApiExplorerPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <div className="text-center space-y-4">
+          <p className="text-red-400">Error: {error}</p>
+          <button
+            onClick={resetToDefault}
+            className="px-4 py-2 bg-[#646cff] text-white rounded font-medium text-sm hover:bg-[#535bf2]"
+          >
+            Reset to Default
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col bg-[#242424]">
       <header className="flex-shrink-0 border-b border-[rgba(255,255,255,0.1)] px-4 py-3">
-        <h1 className="text-lg font-semibold">API Explorer</h1>
-        <p className="text-xs text-[rgba(255,255,255,0.5)]">
-          Groups → Operations → Payload
-        </p>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-lg font-semibold">API Explorer</h1>
+            <p className="text-xs text-[rgba(255,255,255,0.5)]">
+              Groups → Operations → Payload
+            </p>
+          </div>
+          <form
+            onSubmit={handleLoadFromUrl}
+            className="flex items-center gap-2 flex-1 max-w-md"
+          >
+            <input
+              type="url"
+              value={swaggerUrl}
+              onChange={(e) => setSwaggerUrl(e.target.value)}
+              placeholder="Enter Swagger JSON URL..."
+              className="flex-1 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded px-3 py-1.5 text-sm font-mono text-[rgba(255,255,255,0.9)] placeholder:text-[rgba(255,255,255,0.4)]"
+              disabled={isLoadingUrl || loading}
+            />
+            <button
+              type="submit"
+              disabled={isLoadingUrl || loading || !swaggerUrl.trim()}
+              className="px-4 py-1.5 bg-[#646cff] text-white rounded font-medium text-sm hover:bg-[#535bf2] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {isLoadingUrl ? "Loading..." : "Load"}
+            </button>
+            <button
+              type="button"
+              onClick={resetToDefault}
+              disabled={isLoadingUrl || loading}
+              className="px-4 py-1.5 bg-[rgba(255,255,255,0.1)] text-white rounded font-medium text-sm hover:bg-[rgba(255,255,255,0.15)] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              Reset
+            </button>
+          </form>
+        </div>
       </header>
 
       <div
