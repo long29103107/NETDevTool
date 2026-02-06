@@ -11,6 +11,12 @@
     @apply min-w-[1200px] min-h-screen relative m-0 w-full flex justify-center;
   }
 
+  button,
+  label,
+  a {
+    cursor: pointer;
+  }
+
   /* App container: full or half width, centered */
   #root {
     @apply w-full min-h-screen mx-auto;

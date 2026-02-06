@@ -61,6 +61,21 @@ function getSchemaType(schema: SchemaObject | undefined): string {
   return Array.isArray(t) ? t.find((x) => x !== "null") ?? "string" : t;
 }
 
+/** Swagger UI method colors */
+function getMethodColor(method: string): string {
+  const m = method.toLowerCase();
+  const colors: Record<string, string> = {
+    get: "#61affe",
+    post: "#49cc90",
+    put: "#fca130",
+    delete: "#f93e3e",
+    patch: "#50e3c2",
+    head: "#9012fe",
+    options: "#0d5aa7",
+  };
+  return colors[m] ?? "#646cff";
+}
+
 function TypeBadge({ type }: { type: string }) {
   const label = type.charAt(0).toUpperCase() + type.slice(1);
   return (
@@ -231,7 +246,10 @@ function PayloadForm({
       className="p-4 space-y-4 overflow-auto flex flex-col"
     >
       <div>
-        <span className="font-mono font-semibold text-[#646cff] uppercase text-xs mr-2">
+        <span
+          className="font-mono font-semibold uppercase text-xs mr-2"
+          style={{ color: getMethodColor(operation.method) }}
+        >
           {operation.method}
         </span>
         <span className="font-mono text-sm break-all">{operation.path}</span>
@@ -474,7 +492,7 @@ export default function ApiExplorerPage() {
         style={contentHeight !== null ? { height: contentHeight } : undefined}
       >
         <aside className="w-44 flex-shrink-0 border-r border-[rgba(255,255,255,0.1)] overflow-auto self-stretch">
-          <h2 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] px-3 py-2">
+          <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.5)] px-3 py-2 border-b border-[rgba(255,255,255,0.08)]">
             Groups
           </h2>
           <ul className="py-1">
@@ -500,7 +518,7 @@ export default function ApiExplorerPage() {
         </aside>
 
         <aside className="w-72 flex-shrink-0 border-r border-[rgba(255,255,255,0.1)] overflow-auto self-stretch">
-          <h2 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] px-3 py-2">
+          <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.5)] px-3 py-2 border-b border-[rgba(255,255,255,0.08)]">
             Operations
           </h2>
           <ul className="py-1">
@@ -515,7 +533,10 @@ export default function ApiExplorerPage() {
                       : ""
                   }`}
                 >
-                  <span className="font-mono text-[#646cff] uppercase text-xs mr-1">
+                  <span
+                    className="inline-flex items-center justify-center font-mono uppercase text-xs min-w-[2.5rem] min-h-[1.25rem] shrink-0 mr-3"
+                    style={{ color: getMethodColor(op.method) }}
+                  >
                     {op.method}
                   </span>
                   {op.path}
@@ -526,7 +547,7 @@ export default function ApiExplorerPage() {
         </aside>
 
         <main className="flex-1 min-w-0 border-l border-[rgba(255,255,255,0.08)] bg-[#1e1e1e] flex flex-col self-stretch">
-          <h2 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] px-4 py-2 border-b border-[rgba(255,255,255,0.08)]">
+          <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.5)] px-4 py-2 border-b border-[rgba(255,255,255,0.08)]">
             Payload
           </h2>
           <PayloadForm operation={selectedOperation} doc={doc} />
