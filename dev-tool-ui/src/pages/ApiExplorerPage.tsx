@@ -218,7 +218,7 @@ const PayloadForm = ({
             : undefined,
       };
 
-      const loadingToast = toast.loading(
+      const loadingToastId = toast.loading(
         `Sending ${operation.method.toUpperCase()} request...`
       );
       const res = await fetch(url, opts);
@@ -233,15 +233,25 @@ const PayloadForm = ({
       setResponse({ status: res.status, data });
 
       if (res.ok) {
-        toast.success(`Request successful (${res.status})`, {
-          id: loadingToast,
-          description: `${operation.method.toUpperCase()} ${path}`,
-        });
+        toast.success(
+          `Request successful (${
+            res.status
+          }) - ${operation.method.toUpperCase()} ${path}`,
+          {
+            id: loadingToastId,
+            duration: 3000,
+          }
+        );
       } else {
-        toast.error(`Request failed (${res.status})`, {
-          id: loadingToast,
-          description: `${operation.method.toUpperCase()} ${path}`,
-        });
+        toast.error(
+          `Request failed (${
+            res.status
+          }) - ${operation.method.toUpperCase()} ${path}`,
+          {
+            id: loadingToastId,
+            duration: 5000,
+          }
+        );
       }
     } catch (err) {
       const errorMessage =
@@ -250,8 +260,8 @@ const PayloadForm = ({
         status: 0,
         data: errorMessage,
       });
-      toast.error("Request failed", {
-        description: errorMessage,
+      toast.error(`Request failed: ${errorMessage}`, {
+        duration: 3000,
       });
     } finally {
       setSubmitting(false);

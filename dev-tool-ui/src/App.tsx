@@ -9,7 +9,13 @@ export function App() {
       <Routes>
         <Route path="/" element={<ApiExplorerPage />} />
       </Routes>
-      <Toaster position="top-right" richColors />
+      <Toaster
+        position="top-right"
+        richColors
+        limit={3}
+        duration={3000}
+        expand={true}
+      />
     </>
   );
 }

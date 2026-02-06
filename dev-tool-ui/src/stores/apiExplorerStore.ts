@@ -53,7 +53,9 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
     try {
       set({ doc: swaggerDoc, error: null, loading: false });
       get().updateGroups();
-      toast.success("Swagger documentation loaded successfully");
+      toast.success("Swagger documentation loaded successfully", {
+        duration: 3000,
+      });
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to load swagger doc";
@@ -63,6 +65,7 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
       });
       toast.error("Failed to load swagger doc", {
         description: errorMessage,
+        duration: 5000,
       });
     }
   },
@@ -94,6 +97,7 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
       get().updateGroups();
       toast.success("Swagger documentation loaded successfully", {
         id: loadingToast,
+        duration: 3000,
       });
     } catch (err) {
       const errorMessage =
@@ -102,6 +106,7 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
       toast.error("Failed to load swagger doc", {
         description: errorMessage,
         id: loadingToast,
+        duration: 5000,
       });
       // Keep the current doc on error, don't clear it
     } finally {
@@ -115,7 +120,9 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
     try {
       set({ doc: swaggerDoc });
       get().updateGroups();
-      toast.success("Reset to default swagger documentation");
+      toast.success("Reset to default swagger documentation", {
+        duration: 3000,
+      });
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to reset swagger doc";
@@ -124,6 +131,7 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
       });
       toast.error("Failed to reset swagger doc", {
         description: errorMessage,
+        duration: 5000,
       });
     } finally {
       set({ loading: false });
