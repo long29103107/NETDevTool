@@ -2,6 +2,7 @@ import { Button } from "@/components/Button";
 import { Form } from "@/components/Form";
 import type { OpenApiDoc, OperationInfo, SchemaObject } from "@/types/openapi";
 import ApiExplorerPayloadBody from "./ApiExplorerPayloadBody";
+import ApiExplorerPayloadPathParam from "./ApiExplorerPayloadPathParam";
 import ApiExplorerPayloadQueryParam from "./ApiExplorerPayloadQueryParam";
 import ApiExplorerPayloadSummary from "./ApiExplorerPayloadSummary";
 import ApiExplorerPayloadResponse from "./ApiExplorerPayloadResponse";
@@ -46,6 +47,12 @@ const ApiExplorerPayloadForm = ({
       className="p-4 space-y-4 overflow-auto flex flex-col"
     >
       <ApiExplorerPayloadSummary operation={operation} />
+
+      <ApiExplorerPayloadPathParam
+        pathParams={pathParams}
+        pathValues={pathValues}
+        setPathValues={setPathValues}
+      />
 
       <ApiExplorerPayloadQueryParam
         queryParams={queryParams}

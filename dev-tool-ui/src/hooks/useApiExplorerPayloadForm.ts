@@ -124,6 +124,7 @@ export function useApiExplorerPayloadForm({
       setSubmitting(true);
       setResponse(null);
 
+      let loadingToastId: string | number | undefined;
       try {
         const path = buildPath();
         const query = buildQuery();
@@ -137,7 +138,7 @@ export function useApiExplorerPayloadForm({
               : undefined,
         };
 
-        const loadingToastId = toast.loading(
+        loadingToastId = toast.loading(
           `Sending ${operation.method.toUpperCase()} request...`
         );
         const res = await fetch(url, opts);
@@ -146,7 +147,7 @@ export function useApiExplorerPayloadForm({
         try {
           data = JSON.stringify(JSON.parse(text), null, 2);
         } catch {
-          // keep raw text
+          // Response is not JSON (e.g. empty PUT response); keep raw text
         }
 
         setResponse({ status: res.status, data });
@@ -170,7 +171,10 @@ export function useApiExplorerPayloadForm({
         const errorMessage =
           err instanceof Error ? err.message : "Request failed";
         setResponse({ status: 0, data: errorMessage });
-        toast.error(`Request failed: ${errorMessage}`, { duration: 3000 });
+        toast.error(`Request failed: ${errorMessage}`, {
+          id: loadingToastId,
+          duration: 3000,
+        });
       } finally {
         setSubmitting(false);
       }
