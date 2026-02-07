@@ -20,7 +20,10 @@ export interface UseApiExplorerPayloadFormReturn {
   updateBody: (key: string, value: unknown) => void;
   response: { status: number; data: string } | null;
   submitting: boolean;
+  loadingData: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
+  loadData: () => Promise<void>;
+  canLoadData: boolean;
   pathParams: { name: string; required?: boolean; schema?: SchemaObject }[];
   queryParams: { name: string; required?: boolean; schema?: SchemaObject }[];
   schema: SchemaObject | undefined;
@@ -41,6 +44,7 @@ export function useApiExplorerPayloadForm({
     data: string;
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
 
   const pathParams = operation?.parameters.filter((p) => p.in === "path") ?? [];
   const queryParams =
@@ -195,6 +199,67 @@ export function useApiExplorerPayloadForm({
     setBodyValues((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  const canLoadData =
+    !!operation &&
+    !!doc &&
+    (operation.method === "put" ||
+      operation.method === "patch" ||
+      operation.method === "post") &&
+    pathParams.length > 0 &&
+    hasBody;
+
+  const loadData = useCallback(async (): Promise<void> => {
+    if (!operation || !doc || !canLoadData) return;
+    const path = buildPath();
+    if (path.includes("{")) {
+      toast.error("Fill path parameters (e.g. id) before loading.");
+      return;
+    }
+    setLoadingData(true);
+    setResponse(null);
+    let loadingToastId: string | number | undefined;
+    try {
+      const query = buildQuery();
+      const url = `${baseUrl}${path}${query}`;
+      loadingToastId = toast.loading("Loading data…");
+      const res = await fetch(url, { method: "GET" });
+      const text = await res.text();
+      if (!res.ok) {
+        setResponse({ status: res.status, data: text });
+        toast.error(`Load failed (${res.status})`, {
+          id: loadingToastId,
+          duration: 3000,
+        });
+        return;
+      }
+      let data: Record<string, unknown>;
+      try {
+        data = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        toast.error("Response is not JSON", {
+          id: loadingToastId,
+          duration: 3000,
+        });
+        return;
+      }
+      setBodyValues(data);
+      setResponse({ status: res.status, data: JSON.stringify(data, null, 2) });
+      toast.success("Data loaded into form", {
+        id: loadingToastId,
+        duration: 2000,
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Load failed";
+      setResponse({ status: 0, data: errorMessage });
+      toast.error(`Load failed: ${errorMessage}`, {
+        id: loadingToastId,
+        duration: 3000,
+      });
+    } finally {
+      setLoadingData(false);
+    }
+  }, [operation, doc, canLoadData, baseUrl, buildPath, buildQuery]);
+
   return {
     pathValues,
     setPathValues,
@@ -204,7 +269,10 @@ export function useApiExplorerPayloadForm({
     updateBody,
     response,
     submitting,
+    loadingData,
     handleSubmit,
+    loadData,
+    canLoadData,
     pathParams,
     queryParams,
     schema,

@@ -13,9 +13,7 @@ export interface PathParamItem {
 export interface ApiExplorerPayloadPathParamProps {
   pathParams: PathParamItem[];
   pathValues: Record<string, string>;
-  setPathValues: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
+  setPathValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
 const ApiExplorerPayloadPathParam = ({
@@ -30,16 +28,14 @@ const ApiExplorerPayloadPathParam = ({
       <h4 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] mb-2">
         Path parameters
       </h4>
-      <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
         {pathParams.map((p) => {
           const paramType = getSchemaType(p.schema as SchemaObject);
           return (
             <Label key={p.name} className="block">
               <span className="text-[#646cff] font-mono text-sm mr-2 inline-flex items-center flex-wrap gap-y-1">
                 {p.name}
-                {p.required && (
-                  <span className="text-red-500 ml-0.5">*</span>
-                )}
+                {p.required && <span className="text-red-500 ml-0.5">*</span>}
                 <TypeBadge type={paramType} />
               </span>
               <Input

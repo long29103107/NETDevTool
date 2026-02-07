@@ -26,7 +26,10 @@ const ApiExplorerPayloadForm = ({
     updateBody,
     response,
     submitting,
+    loadingData,
     handleSubmit,
+    loadData,
+    canLoadData,
     pathParams,
     queryParams,
     schema,
@@ -53,6 +56,19 @@ const ApiExplorerPayloadForm = ({
         pathValues={pathValues}
         setPathValues={setPathValues}
       />
+
+      {canLoadData && (
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={submitting || loadingData}
+            onClick={loadData}
+          >
+            {loadingData ? "Loading…" : "Load data"}
+          </Button>
+        </div>
+      )}
 
       <ApiExplorerPayloadQueryParam
         queryParams={queryParams}
