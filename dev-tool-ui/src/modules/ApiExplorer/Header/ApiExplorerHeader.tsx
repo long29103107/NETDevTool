@@ -1,3 +1,7 @@
+import { Button } from "@/components/Button";
+import { Form } from "@/components/Form";
+import { Input } from "@/components/Input";
+
 export interface ApiExplorerHeaderProps {
   swaggerUrl: string;
   onSwaggerUrlChange: (url: string) => void;
@@ -24,34 +28,34 @@ const ApiExplorerHeader = ({
             Groups → Operations → Payload
           </p>
         </div>
-        <form
+        <Form
           onSubmit={onLoadFromUrl}
           className="flex items-center gap-2 flex-1 max-w-md"
         >
-          <input
+          <Input
             type="url"
             value={swaggerUrl}
             onChange={(e) => onSwaggerUrlChange(e.target.value)}
             placeholder="Enter Swagger JSON URL..."
-            className="flex-1 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded px-3 py-1.5 text-sm font-mono text-[rgba(255,255,255,0.9)] placeholder:text-[rgba(255,255,255,0.4)]"
             disabled={isLoadingUrl || loading}
           />
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={isLoadingUrl || loading || !swaggerUrl.trim()}
-            className="px-4 py-1.5 bg-[#646cff] text-white rounded font-medium text-sm hover:bg-[#535bf2] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="py-1.5 whitespace-nowrap"
           >
             {isLoadingUrl ? "Loading..." : "Load"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="secondary"
             onClick={onReset}
             disabled={isLoadingUrl || loading}
-            className="px-4 py-1.5 bg-[rgba(255,255,255,0.1)] text-white rounded font-medium text-sm hover:bg-[rgba(255,255,255,0.15)] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           >
             Reset
-          </button>
-        </form>
+          </Button>
+        </Form>
       </div>
     </header>
   );

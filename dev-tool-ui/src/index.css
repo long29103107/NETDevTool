@@ -5,6 +5,11 @@
     font-size: 20px;
     @apply text-[rgba(255,255,255,0.87)] font-sans w-full;
     background: #1a1a2e;
+    /* Border design tokens */
+    --border-color: rgba(255, 255, 255, 0.15);
+    --border-color-subtle: rgba(255, 255, 255, 0.08);
+    --border-color-strong: rgba(255, 255, 255, 0.25);
+    --border-width: 1px;
   }
 
   body {
