@@ -5,8 +5,10 @@ import {
   type OperationInfo,
   type SchemaObject,
   groupOperationsByTag,
-} from "../types/openapi";
-import { useApiExplorerStore } from "../stores/apiExplorerStore";
+} from "@/types/openapi";
+import { useApiExplorerStore } from "@/stores/apiExplorerStore";
+import ApiExplorerHeader from "@/modules/ApiExplorer/Header/ApiExplorerHeader";
+import ApiExplorerOperations from "@/modules/ApiExplorer/Operations/ApiExplorerOperations";
 
 const resolveSchema = (
   s: SchemaObject | { $ref: string } | undefined,
@@ -553,44 +555,14 @@ const ApiExplorerPage = () => {
 
   return (
     <div className="h-screen flex flex-col bg-[#242424]">
-      <header className="flex-shrink-0 border-b border-[rgba(255,255,255,0.1)] px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-lg font-semibold">API Explorer</h1>
-            <p className="text-xs text-[rgba(255,255,255,0.5)]">
-              Groups → Operations → Payload
-            </p>
-          </div>
-          <form
-            onSubmit={handleLoadFromUrl}
-            className="flex items-center gap-2 flex-1 max-w-md"
-          >
-            <input
-              type="url"
-              value={swaggerUrl}
-              onChange={(e) => setSwaggerUrl(e.target.value)}
-              placeholder="Enter Swagger JSON URL..."
-              className="flex-1 bg-[#1a1a1a] border border-[rgba(255,255,255,0.15)] rounded px-3 py-1.5 text-sm font-mono text-[rgba(255,255,255,0.9)] placeholder:text-[rgba(255,255,255,0.4)]"
-              disabled={isLoadingUrl || loading}
-            />
-            <button
-              type="submit"
-              disabled={isLoadingUrl || loading || !swaggerUrl.trim()}
-              className="px-4 py-1.5 bg-[#646cff] text-white rounded font-medium text-sm hover:bg-[#535bf2] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              {isLoadingUrl ? "Loading..." : "Load"}
-            </button>
-            <button
-              type="button"
-              onClick={resetToDefault}
-              disabled={isLoadingUrl || loading}
-              className="px-4 py-1.5 bg-[rgba(255,255,255,0.1)] text-white rounded font-medium text-sm hover:bg-[rgba(255,255,255,0.15)] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              Reset
-            </button>
-          </form>
-        </div>
-      </header>
+      <ApiExplorerHeader
+        swaggerUrl={swaggerUrl}
+        onSwaggerUrlChange={setSwaggerUrl}
+        onLoadFromUrl={handleLoadFromUrl}
+        onReset={resetToDefault}
+        isLoadingUrl={isLoadingUrl}
+        loading={loading}
+      />
 
       <div
         ref={contentRef}
@@ -622,34 +594,11 @@ const ApiExplorerPage = () => {
           </ul>
         </aside>
 
-        <aside className="w-72 flex-shrink-0 border-r border-[rgba(255,255,255,0.1)] overflow-auto self-stretch">
-          <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.7)] px-3 py-2 border-b border-[rgba(255,255,255,0.08)]">
-            Operations
-          </h2>
-          <ul className="py-1">
-            {operations.map((op) => (
-              <li key={op.operationId}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedOperation(op)}
-                  className={`w-full text-left px-3 py-2 text-sm block hover:bg-[rgba(255,255,255,0.06)] truncate ${
-                    selectedOperation?.operationId === op.operationId
-                      ? "bg-[rgba(100,108,255,0.2)] text-[#646cff]"
-                      : ""
-                  }`}
-                >
-                  <span
-                    className="inline-flex items-center justify-center font-mono uppercase text-xs min-w-[2.5rem] min-h-[1.25rem] shrink-0 mr-3"
-                    style={{ color: getMethodColor(op.method) }}
-                  >
-                    {op.method}
-                  </span>
-                  {op.path}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </aside>
+        <ApiExplorerOperations
+          operations={operations}
+          selectedOperation={selectedOperation}
+          onSelectOperation={setSelectedOperation}
+        />
 
         <main className="flex-1 min-w-0 border-l border-[rgba(255,255,255,0.08)] bg-[#1e1e1e] flex flex-col self-stretch">
           <h2 className="font-semibold uppercase text-[rgba(255,255,255,0.7)] px-4 py-2 border-b border-[rgba(255,255,255,0.08)]">
