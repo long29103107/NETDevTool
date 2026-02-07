@@ -102,14 +102,7 @@ const ApiExplorerPage = () => {
 
   return (
     <div className="h-screen flex flex-col bg-[#242424]">
-      <ApiExplorerHeader
-        swaggerUrl={swaggerUrl}
-        onSwaggerUrlChange={setSwaggerUrl}
-        onLoadFromUrl={handleLoadFromUrl}
-        onReset={resetToDefault}
-        isLoadingUrl={isLoadingUrl}
-        loading={loading}
-      />
+      <ApiExplorerHeader />
 
       <div
         ref={contentRef}

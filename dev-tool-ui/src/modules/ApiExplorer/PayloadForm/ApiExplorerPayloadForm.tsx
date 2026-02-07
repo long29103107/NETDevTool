@@ -272,14 +272,14 @@ const ApiExplorerPayloadForm = ({
 
       <div className="flex items-center gap-2">
         <span
-          className="font-mono font-semibold uppercase text-sm mr-2"
+          className="font-mono font-semibold uppercase text- mr-2"
           style={{ color: getMethodColor(operation.method) }}
         >
           {operation.method}
         </span>
         <span
           data-slot="badge"
-          className="inline-flex py-3 w-full rounded-md border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-medium w-fit whitespace-nowrap shrink-0 text-xs font-mono text-[rgba(255,255,255,0.8)] ml-1.5"
+          className="inline-flex py-3 w-full rounded-md border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-medium w-fit whitespace-nowrap text-xs font-mono text-[rgba(255,255,255,0.8)] ml-1.5"
         >
           {operation.path}
         </span>
