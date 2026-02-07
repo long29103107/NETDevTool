@@ -5,78 +5,20 @@ import { Form } from "@/components/Form";
 import { Input } from "@/components/Input";
 import { Label } from "@/components/Label";
 import type { OpenApiDoc, OperationInfo, SchemaObject } from "@/types/openapi";
+import {
+  buildExampleFromSchema,
+  getMethodColor,
+  getRequestBodySchema,
+  getSchemaType,
+  resolveSchema,
+} from "@/utils/openapiSchema";
 import TypeBadge from "./TypeBadge";
+import ApiExplorerPayloadSummary from "./ApiExplorerPayloadSummary";
 
 export interface ApiExplorerPayloadFormProps {
   operation: OperationInfo | null;
   doc: OpenApiDoc | null;
 }
-
-const resolveSchema = (
-  s: SchemaObject | { $ref: string } | undefined,
-  doc: OpenApiDoc
-): SchemaObject | undefined => {
-  if (!s) return undefined;
-  if ("$ref" in s && s.$ref) {
-    const name = s.$ref.split("/").pop();
-    return name ? (doc.components?.schemas?.[name] as SchemaObject) : undefined;
-  }
-  return s as SchemaObject;
-};
-
-const buildExampleFromSchema = (
-  schema: SchemaObject | undefined,
-  doc: OpenApiDoc
-): unknown => {
-  schema = resolveSchema(schema as SchemaObject | { $ref: string }, doc);
-  if (!schema) return null;
-  if (schema.example !== undefined) return schema.example;
-  if (schema.$ref) {
-    const refSchema = resolveSchema(schema as { $ref: string }, doc);
-    return buildExampleFromSchema(refSchema, doc);
-  }
-  if (schema.type === "object" && schema.properties) {
-    const obj: Record<string, unknown> = {};
-    const required = new Set(schema.required ?? []);
-    for (const [key, prop] of Object.entries(schema.properties)) {
-      const sub = resolveSchema(prop as SchemaObject | { $ref: string }, doc);
-      const val = buildExampleFromSchema(sub, doc);
-      if (required.has(key) || val !== undefined) obj[key] = val;
-    }
-    return obj;
-  }
-  if (schema.type === "array") {
-    const item = resolveSchema(
-      schema.items as SchemaObject | { $ref: string },
-      doc
-    );
-    return item ? [buildExampleFromSchema(item, doc)] : [];
-  }
-  if (schema.type === "string") return "";
-  if (schema.type === "integer" || schema.type === "number") return 0;
-  if (schema.type === "boolean") return false;
-  return null;
-};
-
-const getSchemaType = (schema: SchemaObject | undefined): string => {
-  if (!schema?.type) return "string";
-  const t = schema.type;
-  return Array.isArray(t) ? t.find((x) => x !== "null") ?? "string" : t;
-};
-
-const getMethodColor = (method: string): string => {
-  const m = method.toLowerCase();
-  const colors: Record<string, string> = {
-    get: "#61affe",
-    post: "#49cc90",
-    put: "#fca130",
-    delete: "#f93e3e",
-    patch: "#50e3c2",
-    head: "#9012fe",
-    options: "#0d5aa7",
-  };
-  return colors[m] ?? "#646cff";
-};
 
 const ApiExplorerPayloadForm = ({
   operation,
@@ -95,15 +37,7 @@ const ApiExplorerPayloadForm = ({
     if (!operation || !doc) return;
     const pathParams = operation.parameters.filter((p) => p.in === "path");
     const queryParams = operation.parameters.filter((p) => p.in === "query");
-    const jsonSchema =
-      operation.requestBody?.content?.["application/json"]?.schema ??
-      operation.requestBody?.content?.["application/*"]?.schema;
-    const schema =
-      jsonSchema && "$ref" in jsonSchema && jsonSchema.$ref
-        ? (doc.components?.schemas?.[
-            jsonSchema.$ref.split("/").pop() ?? ""
-          ] as SchemaObject)
-        : (jsonSchema as SchemaObject | undefined);
+    const schema = getRequestBodySchema(operation, doc);
     const exampleBody = buildExampleFromSchema(schema, doc) as Record<
       string,
       unknown
@@ -142,15 +76,7 @@ const ApiExplorerPayloadForm = ({
 
   const pathParams = operation.parameters.filter((p) => p.in === "path");
   const queryParams = operation.parameters.filter((p) => p.in === "query");
-  const jsonSchema =
-    operation.requestBody?.content?.["application/json"]?.schema ??
-    operation.requestBody?.content?.["application/*"]?.schema;
-  const schema =
-    jsonSchema && "$ref" in jsonSchema && jsonSchema.$ref
-      ? (doc.components?.schemas?.[
-          jsonSchema.$ref.split("/").pop() ?? ""
-        ] as SchemaObject)
-      : (jsonSchema as SchemaObject | undefined);
+  const schema = getRequestBodySchema(operation, doc);
 
   const hasBody =
     (operation.method === "post" ||
@@ -264,26 +190,7 @@ const ApiExplorerPayloadForm = ({
       onSubmit={handleSubmit}
       className="p-4 space-y-4 overflow-auto flex flex-col"
     >
-      {operation.summary && (
-        <p className="text-lg text-[rgba(255,255,255,0.7)]">
-          {operation.summary}
-        </p>
-      )}
-
-      <div className="flex items-center gap-2">
-        <span
-          className="font-mono font-semibold uppercase text- mr-2"
-          style={{ color: getMethodColor(operation.method) }}
-        >
-          {operation.method}
-        </span>
-        <span
-          data-slot="badge"
-          className="inline-flex py-3 w-full rounded-md border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-medium w-fit whitespace-nowrap text-xs font-mono text-[rgba(255,255,255,0.8)] ml-1.5"
-        >
-          {operation.path}
-        </span>
-      </div>
+      <ApiExplorerPayloadSummary operation={operation} />
 
       {pathParams.length > 0 && (
         <section>

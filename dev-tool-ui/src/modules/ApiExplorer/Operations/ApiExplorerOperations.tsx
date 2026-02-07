@@ -1,25 +1,12 @@
 import { Button } from "@/components/Button";
 import type { OperationInfo } from "@/types/openapi";
+import { getMethodColor } from "@/utils/openapiSchema";
 
 export interface ApiExplorerOperationsProps {
   operations: OperationInfo[];
   selectedOperation: OperationInfo | null;
   onSelectOperation: (operation: OperationInfo) => void;
 }
-
-const getMethodColor = (method: string): string => {
-  const m = method.toLowerCase();
-  const colors: Record<string, string> = {
-    get: "#61affe",
-    post: "#49cc90",
-    put: "#fca130",
-    delete: "#f93e3e",
-    patch: "#50e3c2",
-    head: "#9012fe",
-    options: "#0d5aa7",
-  };
-  return colors[m] ?? "#646cff";
-};
 
 const ApiExplorerOperations = ({
   operations,
