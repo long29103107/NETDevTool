@@ -5,6 +5,7 @@ export type InputBorder = "default" | "none" | "subtle" | "strong";
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string;
   border?: InputBorder;
+  error?: string | boolean;
 }
 
 const baseClass =
@@ -28,19 +29,32 @@ export function Input({
   className = "",
   type = "text",
   border = "default",
+  error,
   ...rest
 }: InputProps) {
   const typeClass = typeClasses[type] ?? "px-2 py-1.5 w-full";
+  
+  const borderClass = error 
+    ? "border border-red-500/50 focus:border-red-500" 
+    : borderClasses[border];
+
   const combinedClassName = [
     baseClass,
-    borderClasses[border],
+    borderClass,
     typeClass,
     className,
   ]
     .filter(Boolean)
     .join(" ");
 
-  return <input type={type} className={combinedClassName} {...rest} />;
+  return (
+    <div className="w-full">
+        <input type={type} className={combinedClassName} {...rest} />
+        {typeof error === 'string' && (
+            <p className="text-red-400 text-xs mt-1">{error}</p>
+        )}
+    </div>
+  );
 }
 
 export default Input;

@@ -1,3 +1,6 @@
+import { Button } from "@/components/Button/Button";
+import { useCopy } from "@/hooks/useCopy";
+
 export interface ApiExplorerPayloadResponseProps {
   response: { status: number; data: string } | null;
 }
@@ -23,19 +26,37 @@ const ApiExplorerPayloadResponse = ({
 
   return (
     <section className="mt-2 flex-1 w-full flex flex-col">
-      <h4 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] mb-1 flex items-center gap-2">
-        <span>Response</span>
-        <span
-          className={`font-mono font-bold ${statusColor}`}
-          aria-label={`Status ${displayStatus}`}
-        >
-          {displayStatus}
-        </span>
-      </h4>
+      <div className="flex items-center justify-between mb-1">
+        <h4 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] flex items-center gap-2">
+          <span>Response</span>
+          <span
+            className={`font-mono font-bold ${statusColor}`}
+            aria-label={`Status ${displayStatus}`}
+          >
+            {displayStatus}
+          </span>
+        </h4>
+        <CopyResponseButton data={response.data} />
+      </div>
       <pre className="flex-1 bg-[#1a1a1a] rounded p-3 text-xs font-mono overflow-auto min-h-[120px] text-[rgba(255,255,255,0.9)]">
         {response.data}
       </pre>
     </section>
+  );
+};
+
+const CopyResponseButton = ({ data }: { data: string }) => {
+  const { copied, copy } = useCopy();
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={() => copy(data)}
+      className="!h-auto !py-1 !px-2 text-xs text-[rgba(255,255,255,0.5)] hover:!text-white"
+    >
+      {copied ? "Copied" : "Copy"}
+    </Button>
   );
 };
 

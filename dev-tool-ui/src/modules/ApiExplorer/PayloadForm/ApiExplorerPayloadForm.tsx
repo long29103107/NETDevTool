@@ -7,6 +7,7 @@ import ApiExplorerPayloadQueryParam from "./ApiExplorerPayloadQueryParam";
 import ApiExplorerPayloadSummary from "./ApiExplorerPayloadSummary";
 import ApiExplorerPayloadResponse from "./ApiExplorerPayloadResponse";
 import { useApiExplorerPayloadForm } from "../../../hooks/useApiExplorerPayloadForm";
+import { useCopy } from "@/hooks/useCopy";
 
 export interface ApiExplorerPayloadFormProps {
   operation: OperationInfo | null;
@@ -34,6 +35,9 @@ const ApiExplorerPayloadForm = ({
     queryParams,
     schema,
     hasBody,
+    buildCurl,
+    isPathValid,
+    isQueryValid,
   } = useApiExplorerPayloadForm({ operation, doc });
 
   if (!operation || !doc) {
@@ -44,6 +48,8 @@ const ApiExplorerPayloadForm = ({
     );
   }
 
+  const isValid = isPathValid && isQueryValid;
+
   return (
     <Form
       onSubmit={handleSubmit}
@@ -52,6 +58,7 @@ const ApiExplorerPayloadForm = ({
       <ApiExplorerPayloadSummary operation={operation} />
 
       <ApiExplorerPayloadPathParam
+        key={operation.operationId}
         pathParams={pathParams}
         pathValues={pathValues}
         setPathValues={setPathValues}
@@ -62,7 +69,7 @@ const ApiExplorerPayloadForm = ({
           <Button
             type="button"
             variant="secondary"
-            disabled={submitting || loadingData}
+            disabled={submitting || loadingData || !isValid}
             onClick={loadData}
           >
             {loadingData ? "Loading…" : "Load data"}
@@ -71,6 +78,7 @@ const ApiExplorerPayloadForm = ({
       )}
 
       <ApiExplorerPayloadQueryParam
+        key={operation.operationId}
         queryParams={queryParams}
         queryValues={queryValues}
         setQueryValues={setQueryValues}
@@ -78,6 +86,7 @@ const ApiExplorerPayloadForm = ({
 
       {hasBody && schema?.properties && (
         <ApiExplorerPayloadBody
+          key={operation.operationId}
           doc={doc}
           schema={
             schema as unknown as SchemaObject & {
@@ -90,13 +99,28 @@ const ApiExplorerPayloadForm = ({
       )}
 
       <div className="flex gap-2 flex-shrink-0">
-        <Button type="submit" variant="primary" disabled={submitting}>
+        <Button type="submit" variant="primary" disabled={submitting || !isValid}>
           {submitting ? "Sending…" : "Submit"}
         </Button>
+        <CopyCurlButton buildCurl={buildCurl} />
       </div>
 
       <ApiExplorerPayloadResponse response={response} />
     </Form>
+  );
+};
+
+const CopyCurlButton = ({ buildCurl }: { buildCurl: () => string }) => {
+  const { copied, copy } = useCopy();
+
+  const handleCopy = () => {
+    copy(buildCurl());
+  };
+
+  return (
+    <Button type="button" variant="secondary" onClick={handleCopy}>
+      {copied ? "Copied!" : "Copy cURL"}
+    </Button>
   );
 };
 

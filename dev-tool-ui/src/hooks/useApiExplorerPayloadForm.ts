@@ -30,6 +30,9 @@ export interface UseApiExplorerPayloadFormReturn {
   hasBody: boolean;
   bodyKeys: string[];
   baseUrl: string;
+  buildCurl: () => string;
+  isPathValid: boolean;
+  isQueryValid: boolean;
 }
 
 export function useApiExplorerPayloadForm({
@@ -260,6 +263,45 @@ export function useApiExplorerPayloadForm({
     }
   }, [operation, doc, canLoadData, baseUrl, buildPath, buildQuery]);
 
+  const buildCurl = useCallback((): string => {
+    if (!operation || !doc) return "";
+    const path = buildPath();
+    const query = buildQuery();
+    const url = `${baseUrl}${path}${query}`;
+    const method = operation.method.toUpperCase();
+    
+    let curl = `curl -X ${method} "${url}"`;
+    
+    // Headers
+    if (hasBody) {
+        curl += ` \\\n  -H "Content-Type: application/json"`;
+    }
+    
+    // Body
+    if (hasBody && bodyKeys.length > 0) {
+        const body = JSON.stringify(bodyValues, null, 2);
+        // Escape single quotes for shell safety if needed, though simple JSON stringify is usually okay for basics.
+        // For better safety we might use single quotes for the body wrapper and escape single quotes inside.
+        curl += ` \\\n  -d '${JSON.stringify(bodyValues)}'`;
+    }
+    
+    return curl;
+  }, [operation, doc, baseUrl, buildPath, buildQuery, hasBody, bodyKeys, bodyValues]);
+
+  const isPathValid = pathParams.every((p) => {
+    if (!p.required) return true;
+    const val = pathValues[p.name];
+    const strVal = String(val ?? "").trim();
+    return val !== undefined && val !== null && strVal !== "";
+  });
+
+  const isQueryValid = queryParams.every((p) => {
+    if (!p.required) return true;
+    const val = queryValues[p.name];
+    const strVal = String(val ?? "").trim();
+    return val !== undefined && val !== null && strVal !== "";
+  });
+
   return {
     pathValues,
     setPathValues,
@@ -279,5 +321,8 @@ export function useApiExplorerPayloadForm({
     hasBody,
     bodyKeys,
     baseUrl,
+    buildCurl,
+    isPathValid,
+    isQueryValid,
   };
 }

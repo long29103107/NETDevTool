@@ -42,7 +42,7 @@ const PathWithCopy = ({ path }: { path: string }) => {
   return (
     <span
       data-slot="badge"
-      className="inline-flex items-center gap-2 rounded-md border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-medium w-fit whitespace-nowrap text-xs font-mono text-[rgba(255,255,255,0.8)] ml-1.5"
+      className="inline-flex items-center gap-2 rounded-md border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.06)] p-2 font-medium w-fit whitespace-nowrap text-xs font-mono text-[rgba(255,255,255,0.8)] ml-1.5"
     >
       {path}
       <Button
