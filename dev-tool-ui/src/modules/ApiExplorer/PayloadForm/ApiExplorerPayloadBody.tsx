@@ -7,6 +7,7 @@ import type { OpenApiDoc, SchemaObject } from "@/types/openapi";
 import { getSchemaType, resolveSchema } from "@/utils/openapiSchema";
 import { useForeignKeyOptions } from "@/hooks/useForeignKeyOptions";
 import { formatDescription } from "@/utils/tooltip";
+import { validateField, getFieldPlaceholder } from "@/utils/validation";
 import TypeBadge from "./TypeBadge";
 
 export interface ApiExplorerPayloadBodyProps {
@@ -75,8 +76,9 @@ const BodyPropRow = ({
 
   const handleBlur = () => setTouched(true);
 
-  const isError = isRequired && (val === undefined || val === null || (typeof val === "string" && val.trim() === ""));
-  const showError = touched && isError;
+  const error = validateField(val, prop, isRequired);
+  const showError = touched && !!error;
+  const placeholder = getFieldPlaceholder(prop);
 
   return (
     <Label className="block">
@@ -114,7 +116,8 @@ const BodyPropRow = ({
           value={val === undefined || val === null ? "" : String(val)}
           options={options}
           disabled={loading}
-          error={showError ? "Required" : undefined}
+          error={showError ? error : undefined}
+          placeholder={placeholder}
           onChange={(e) => {
             const v = e.target.value;
             if (type === "integer")
@@ -142,7 +145,8 @@ const BodyPropRow = ({
           type={type === "integer" || type === "number" ? "number" : "text"}
           step={type === "number" ? "any" : undefined}
           value={val === undefined || val === null ? "" : String(val)}
-          error={showError ? "Required" : undefined}
+          error={showError ? error : undefined}
+          placeholder={placeholder}
           onChange={(e) => {
             const v = e.target.value;
             if (type === "integer")

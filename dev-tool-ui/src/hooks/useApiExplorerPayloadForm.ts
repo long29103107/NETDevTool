@@ -4,7 +4,9 @@ import type { OpenApiDoc, OperationInfo, SchemaObject } from "@/types/openapi";
 import {
   buildExampleFromSchema,
   getRequestBodySchema,
+  resolveSchema,
 } from "@/utils/openapiSchema";
+import { validateField } from "@/utils/validation";
 
 export interface UseApiExplorerPayloadFormParams {
   operation: OperationInfo | null;
@@ -290,27 +292,20 @@ export function useApiExplorerPayloadForm({
   }, [operation, doc, baseUrl, buildPath, buildQuery, hasBody, bodyKeys, bodyValues]);
 
   const isPathValid = pathParams.every((p) => {
-    if (!p.required) return true;
-    const val = pathValues[p.name];
-    const strVal = String(val ?? "").trim();
-    return val !== undefined && val !== null && strVal !== "";
+    return !validateField(pathValues[p.name], p.schema as SchemaObject, p.required);
   });
 
   const isQueryValid = queryParams.every((p) => {
-    if (!p.required) return true;
-    const val = queryValues[p.name];
-    const strVal = String(val ?? "").trim();
-    return val !== undefined && val !== null && strVal !== "";
+    return !validateField(queryValues[p.name], p.schema as SchemaObject, p.required);
   });
 
   const isBodyValid = ((): boolean => {
     if (!hasBody || !schema?.properties) return true;
     const required = schema.required ?? [];
-    return required.every((key) => {
-      const val = bodyValues[key];
-      if (val === undefined || val === null) return false;
-      if (typeof val === "string" && val.trim() === "") return false;
-      return true;
+    return Object.keys(schema.properties).every((key) => {
+      const propSchemaOrRef = schema.properties![key];
+      const propSchema = resolveSchema(propSchemaOrRef, doc || ({} as any)) as SchemaObject;
+      return !validateField(bodyValues[key], propSchema, required.includes(key));
     });
   })();
 

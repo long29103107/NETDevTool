@@ -23,5 +23,5 @@ public record CreateCategoryRequest(
 /// <param name="Name">The name. <example>Consumer Electronics</example></param>
 /// <param name="Code">The code. <example>CELEC</example></param>
 public record UpdateCategoryRequest(
-    [property: StringLength(50), SwaggerSchema(Description = "The name of the category")] string? Name, 
-    [property: StringLength(10), SwaggerSchema(Description = "A unique code identifying the category")] string? Code);
+    [property: StringLength(50, ErrorMessage = "Category name cannot exceed 50 characters"), SwaggerSchema(Description = "The name of the category")] string? Name, 
+    [property: StringLength(10, ErrorMessage = "Category code cannot exceed 10 characters"), SwaggerSchema(Description = "A unique code identifying the category")] string? Code);

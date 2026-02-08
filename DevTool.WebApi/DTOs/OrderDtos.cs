@@ -13,7 +13,7 @@ public record OrderResponse(
     [property: SwaggerSchema(Description = "The unique identifier")] int Id, 
     DateTime OrderDate, 
     [property: SwaggerSchema(Description = "The total amount")] decimal TotalAmount, 
-    [property: Required, StringLength(100), SwaggerSchema(Description = "The customer name")] string CustomerName, 
+    [property: Required(ErrorMessage = "Customer name is required"), StringLength(100, ErrorMessage = "Customer name cannot exceed 100 characters"), SwaggerSchema(Description = "The customer name")] string CustomerName, 
     IReadOnlyList<OrderItemResponse> Items);
 
 /// <summary>Represents an item within an order.</summary>
@@ -26,19 +26,19 @@ public record OrderItemResponse(
     [property: SwaggerSchema(Description = "The unique identifier")] int Id, 
     [property: SwaggerSchema(Description = "Foreign key to Product")] int ProductId, 
     [property: SwaggerSchema(Description = "The name of the product")] string ProductName, 
-    [property: Range(1, 1000), SwaggerSchema(Description = "The quantity")] int Quantity, 
+    [property: Range(1, 1000, ErrorMessage = "Quantity must be between 1 and 1000"), SwaggerSchema(Description = "The quantity")] int Quantity, 
     [property: SwaggerSchema(Description = "The unit price")] decimal UnitPrice);
 
 /// <summary>Request to create a new customer order.</summary>
 /// <param name="CustomerName">The name. <example>John Doe</example></param>
 /// <param name="Items">The items. <example>[{"productId": 1, "quantity": 2}]</example></param>
 public record CreateOrderRequest(
-    [property: Required, StringLength(100), SwaggerSchema(Description = "The customer name")] string CustomerName, 
-    [property: Required, SwaggerSchema(Description = "The items")] IReadOnlyList<CreateOrderItemRequest> Items);
+    [property: Required(ErrorMessage = "Customer name is required"), StringLength(100, ErrorMessage = "Customer name cannot exceed 100 characters"), SwaggerSchema(Description = "The customer name")] string CustomerName, 
+    [property: Required(ErrorMessage = "Order items are required"), SwaggerSchema(Description = "The items")] IReadOnlyList<CreateOrderItemRequest> Items);
 
 /// <summary>Request to add an item to a new order.</summary>
 /// <param name="ProductId">The product ID. <example>1</example></param>
 /// <param name="Quantity">The quantity. <example>2</example></param>
 public record CreateOrderItemRequest(
     [property: SwaggerSchema(Description = "Foreign key to Product")] int ProductId, 
-    [property: Range(1, 1000), SwaggerSchema(Description = "The quantity")] int Quantity);
+    [property: Range(1, 1000, ErrorMessage = "Quantity must be between 1 and 1000"), SwaggerSchema(Description = "The quantity")] int Quantity);

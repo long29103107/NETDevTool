@@ -8,6 +8,7 @@ import { useForeignKeyOptions } from "@/hooks/useForeignKeyOptions";
 import { Tooltip } from "@/components/Tooltip";
 import TypeBadge from "./TypeBadge";
 import { formatDescription } from "@/utils/tooltip";
+import { validateField, getFieldPlaceholder } from "@/utils/validation";
 
 export interface PathParamItem {
   name: string;
@@ -65,8 +66,9 @@ const PathParamRow = ({
   const { options, loading } = useForeignKeyOptions(p.schema as SchemaObject, doc);
 
   const paramType = getSchemaType(p.schema as SchemaObject);
-  const isError = p.required && (!value || String(value).trim() === "");
-  const showError = touched && isError;
+  const error = validateField(value, p.schema as SchemaObject, p.required);
+  const showError = touched && !!error;
+  const placeholder = getFieldPlaceholder(p.schema as SchemaObject);
 
   return (
     <Label className="block">
@@ -104,7 +106,8 @@ const PathParamRow = ({
           value={value}
           options={options}
           disabled={loading}
-          error={showError ? "Required" : undefined}
+          error={showError ? error : undefined}
+          placeholder={placeholder}
           onChange={(e) => {
             onChange(e.target.value);
             setTouched(true);
@@ -121,7 +124,8 @@ const PathParamRow = ({
           }
           step={paramType === "number" ? "any" : undefined}
           value={value}
-          error={showError ? "Required" : undefined}
+          error={showError ? error : undefined}
+          placeholder={placeholder}
           onChange={(e) => {
             onChange(e.target.value);
             setTouched(true);

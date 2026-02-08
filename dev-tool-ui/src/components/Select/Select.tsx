@@ -9,6 +9,7 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   options: SelectOption[];
   error?: string | boolean;
   border?: "default" | "none" | "subtle" | "strong";
+  placeholder?: string;
 }
 
 const baseClass =
@@ -26,6 +27,7 @@ export function Select({
   className = "",
   error,
   border = "default",
+  placeholder,
   ...rest
 }: SelectProps) {
   const borderClass = error
@@ -43,6 +45,11 @@ export function Select({
   return (
     <div className="w-full relative">
       <select className={combinedClassName} {...rest}>
+        {placeholder && (
+          <option value="" disabled hidden className="text-[rgba(255,255,255,0.4)]">
+            {placeholder}
+          </option>
+        )}
         {options.map((opt) => (
           <option key={opt.value} value={opt.value} className="bg-[#1a1a1a]">
             {opt.label}

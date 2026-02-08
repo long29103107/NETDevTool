@@ -14,13 +14,13 @@ public record InventoryResponse(
     [property: SwaggerSchema(Description = "The unique identifier")] int Id, 
     [property: SwaggerSchema(Description = "Foreign key to Product")] int ProductId, 
     [property: SwaggerSchema(Description = "The name of the associated product")] string ProductName, 
-    [property: Range(0, 1000000), SwaggerSchema(Description = "The current quantity available")] int Quantity, 
-    [property: StringLength(200), SwaggerSchema(Description = "The physical location")] string Location, 
+    [property: Range(0, 1000000, ErrorMessage = "Quantity must be between 0 and 1,000,000"), SwaggerSchema(Description = "The current quantity available")] int Quantity, 
+    [property: StringLength(200, ErrorMessage = "Location cannot exceed 200 characters"), SwaggerSchema(Description = "The physical location")] string Location, 
     DateTime LastUpdated);
 
 /// <summary>Request to update the quantity or location of a product's inventory.</summary>
 /// <param name="Quantity">The new quantity. <example>100</example></param>
 /// <param name="Location">The new location. <example>Warehouse A, Aisle 4</example></param>
 public record UpdateInventoryQuantityRequest(
-    [property: Range(0, 1000000), SwaggerSchema(Description = "The new quantity")] int Quantity, 
-    [property: StringLength(200), SwaggerSchema(Description = "The new location")] string? Location);
+    [property: Range(0, 1000000, ErrorMessage = "Quantity must be between 0 and 1,000,000"), SwaggerSchema(Description = "The new quantity")] int Quantity, 
+    [property: StringLength(200, ErrorMessage = "Location cannot exceed 200 characters"), SwaggerSchema(Description = "The new location")] string? Location);
