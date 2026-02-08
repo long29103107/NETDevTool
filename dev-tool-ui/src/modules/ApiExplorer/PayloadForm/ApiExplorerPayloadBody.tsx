@@ -6,6 +6,7 @@ import { Tooltip } from "@/components/Tooltip";
 import type { OpenApiDoc, SchemaObject } from "@/types/openapi";
 import { getSchemaType, resolveSchema } from "@/utils/openapiSchema";
 import { useForeignKeyOptions } from "@/hooks/useForeignKeyOptions";
+import { formatDescription } from "@/utils/tooltip";
 import TypeBadge from "./TypeBadge";
 
 export interface ApiExplorerPayloadBodyProps {
@@ -81,7 +82,7 @@ const BodyPropRow = ({
           <span className="truncate">{propKey}</span>
           {isRequired && <span className="text-red-500 shrink-0">*</span>}
           {prop?.description && (
-            <Tooltip content={prop.description} maxWidth="300px">
+            <Tooltip content={formatDescription(prop.description)} maxWidth="300px">
               <span className="text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.8)] cursor-help shrink-0">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

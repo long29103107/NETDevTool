@@ -7,6 +7,7 @@ import { getSchemaType } from "@/utils/openapiSchema";
 import { useForeignKeyOptions } from "@/hooks/useForeignKeyOptions";
 import { Tooltip } from "@/components/Tooltip";
 import TypeBadge from "./TypeBadge";
+import { formatDescription } from "@/utils/tooltip";
 
 export interface QueryParamItem {
   name: string;
@@ -76,7 +77,7 @@ const QueryParamRow = ({
           <span className="truncate">{p.name}</span>
           {p.required && <span className="text-red-500 shrink-0">*</span>}
           {p.description && (
-            <Tooltip content={p.description} maxWidth="300px">
+            <Tooltip content={formatDescription(p.description)} maxWidth="300px">
               <span className="text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.8)] cursor-help shrink-0">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
