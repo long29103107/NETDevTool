@@ -17,6 +17,12 @@ const ApiExplorerPayloadSummary = ({
         </p>
       )}
 
+      {operation.description && (
+        <p className="text-sm text-[rgba(255,255,255,0.5)] leading-relaxed">
+          {operation.description}
+        </p>
+      )}
+
       <div className="flex items-center gap-2">
         <span
           className="font-mono font-semibold uppercase text- mr-2"

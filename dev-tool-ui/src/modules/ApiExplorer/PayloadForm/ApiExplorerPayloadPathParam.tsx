@@ -32,9 +32,6 @@ const ApiExplorerPayloadPathParam = ({
 
   return (
     <section>
-      <h4 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] mb-2">
-        Path parameters
-      </h4>
       <div className="grid grid-cols-2 gap-x-4 gap-y-2">
         {pathParams.map((p) => {
           const paramType = getSchemaType(p.schema as SchemaObject);

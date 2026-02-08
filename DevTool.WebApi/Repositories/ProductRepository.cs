@@ -6,8 +6,24 @@ namespace DevTool.WebApi.Repositories;
 
 public class ProductRepository(AppDbContext db) : IProductRepository
 {
-    public async Task<IReadOnlyList<Product>> GetAllAsync(CancellationToken ct = default) =>
-        await db.Products.OrderBy(p => p.Id).ToListAsync(ct);
+    public async Task<IReadOnlyList<Product>> GetAllAsync(string? name = null, int? categoryId = null, decimal? minPrice = null, decimal? maxPrice = null, CancellationToken ct = default)
+    {
+        var query = db.Products.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(name))
+            query = query.Where(p => p.Name.Contains(name));
+
+        if (categoryId.HasValue)
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+
+        if (minPrice.HasValue)
+            query = query.Where(p => p.Price >= minPrice.Value);
+
+        if (maxPrice.HasValue)
+            query = query.Where(p => p.Price <= maxPrice.Value);
+
+        return await query.OrderBy(p => p.Id).ToListAsync(ct);
+    }
 
     public async Task<Product?> GetByIdAsync(int id, CancellationToken ct = default) =>
         await db.Products.FindAsync([id], ct);

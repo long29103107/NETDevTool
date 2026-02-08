@@ -25,6 +25,7 @@ export interface PathItem {
 export interface Operation {
   tags?: string[];
   summary?: string;
+  description?: string;
   operationId?: string;
   parameters?: ParameterOrRef[];
   requestBody?: RequestBody;
@@ -64,6 +65,7 @@ export interface OperationInfo {
   method: HttpMethod;
   path: string;
   summary: string;
+  description?: string;
   operationId: string;
   parameters: Parameter[];
   requestBody?: RequestBody;
@@ -116,6 +118,7 @@ export function groupOperationsByTag(
         method,
         path,
         summary: op.summary ?? op.operationId ?? `${method} ${path}`,
+        description: op.description,
         operationId: op.operationId ?? `${method}-${path}`,
         parameters: params,
         requestBody: op.requestBody,

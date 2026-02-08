@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { type OpenApiDoc } from "../types/openapi";
-import swaggerFromSrc from "../swagger.json";
-
-const swaggerDoc = swaggerFromSrc as unknown as OpenApiDoc;
 
 interface UseSwaggerDocReturn {
   doc: OpenApiDoc | null;
@@ -13,7 +10,7 @@ interface UseSwaggerDocReturn {
 }
 
 /**
- * Custom hook to fetch Swagger documentation from local swaggerDoc
+ * Custom hook to fetch Swagger documentation from the current origin
  * and allows replacing it with another public swagger JSON URL
  */
 export function useSwaggerDoc(): UseSwaggerDocReturn {
@@ -21,24 +18,10 @@ export function useSwaggerDoc(): UseSwaggerDocReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load initial swagger doc from local file
-  useEffect(() => {
-    try {
-      setDoc(swaggerDoc);
-      setError(null);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load swagger doc"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const getUrl = () => `${window.location.origin}/openapi/v1.json`;
 
-  /**
-   * Replace the current swagger doc with one fetched from a public URL
-   */
-  const replaceWithUrl = useCallback(async (url: string) => {
+  const fetchDoc = useCallback(async (url: string) => {
+    console.log("fetchDoc ~ url:", url);
     setLoading(true);
     setError(null);
 
@@ -53,7 +36,6 @@ export function useSwaggerDoc(): UseSwaggerDocReturn {
 
       const data = await response.json();
 
-      // Validate that it's a valid OpenAPI doc structure
       if (!data || typeof data !== "object" || !data.paths) {
         throw new Error(
           "Invalid swagger JSON format: missing 'paths' property"
@@ -65,28 +47,29 @@ export function useSwaggerDoc(): UseSwaggerDocReturn {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch swagger doc";
       setError(errorMessage);
-      // Keep the current doc on error, don't clear it
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Load initial swagger doc from API
+  useEffect(() => {
+    fetchDoc(getUrl());
+  }, [fetchDoc]);
+
   /**
-   * Reset to the default local swagger doc
+   * Replace the current swagger doc with one fetched from a public URL
+   */
+  const replaceWithUrl = useCallback(async (url: string) => {
+    await fetchDoc(url);
+  }, [fetchDoc]);
+
+  /**
+   * Reset to the default API swagger doc
    */
   const resetToDefault = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    try {
-      setDoc(swaggerDoc);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to reset swagger doc"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    fetchDoc(getUrl());
+  }, [fetchDoc]);
 
   return {
     doc,

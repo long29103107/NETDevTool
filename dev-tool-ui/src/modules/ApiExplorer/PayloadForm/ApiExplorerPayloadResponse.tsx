@@ -28,7 +28,6 @@ const ApiExplorerPayloadResponse = ({
     <section className="mt-2 flex-1 w-full flex flex-col">
       <div className="flex items-center justify-between mb-1">
         <h4 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] flex items-center gap-2">
-          <span>Response</span>
           <span
             className={`font-mono font-bold ${statusColor}`}
             aria-label={`Status ${displayStatus}`}

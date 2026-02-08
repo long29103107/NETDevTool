@@ -6,9 +6,9 @@ namespace DevTool.WebApi.Services;
 
 public class ProductService(IProductRepository repository) : IProductService
 {
-    public async Task<IReadOnlyList<ProductResponse>> GetAllAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<ProductResponse>> GetAllAsync(string? name = null, int? categoryId = null, decimal? minPrice = null, decimal? maxPrice = null, CancellationToken ct = default)
     {
-        var products = await repository.GetAllAsync(ct);
+        var products = await repository.GetAllAsync(name, categoryId, minPrice, maxPrice, ct);
         return products.Select(ToResponse).ToList();
     }
 

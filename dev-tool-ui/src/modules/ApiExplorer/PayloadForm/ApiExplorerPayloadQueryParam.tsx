@@ -34,9 +34,6 @@ const ApiExplorerPayloadQueryParam = ({
 
   return (
     <section>
-      <h4 className="text-xs font-semibold uppercase text-[rgba(255,255,255,0.5)] mb-2">
-        Query parameters
-      </h4>
       <div className="space-y-2">
         {queryParams.map((p) => {
           const paramType = getSchemaType(p.schema as SchemaObject);

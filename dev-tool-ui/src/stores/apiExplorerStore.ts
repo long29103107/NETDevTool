@@ -5,9 +5,8 @@ import {
   type OperationInfo,
   groupOperationsByTag,
 } from "../types/openapi";
-import swaggerFromSrc from "../swagger.json";
 
-const swaggerDoc = swaggerFromSrc as unknown as OpenApiDoc;
+const getDefaultUrl = () => `${window.location.origin}/openapi/v1.json`;
 
 interface ApiExplorerState {
   // Swagger doc state
@@ -48,26 +47,9 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
   swaggerUrl: "",
   isLoadingUrl: false,
 
-  // Initialize doc from local file
+  // Initialize doc from API
   initializeDoc: () => {
-    try {
-      set({ doc: swaggerDoc, error: null, loading: false });
-      get().updateGroups();
-      toast.success("Swagger documentation loaded successfully", {
-        duration: 3000,
-      });
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load swagger doc";
-      set({
-        error: errorMessage,
-        loading: false,
-      });
-      toast.error("Failed to load swagger doc", {
-        description: errorMessage,
-        duration: 5000,
-      });
-    }
+    get().replaceWithUrl(getDefaultUrl());
   },
 
   // Replace doc with one from URL
@@ -114,28 +96,9 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
     }
   },
 
-  // Reset to default local doc
+  // Reset to default
   resetToDefault: () => {
-    set({ loading: true, error: null });
-    try {
-      set({ doc: swaggerDoc });
-      get().updateGroups();
-      toast.success("Reset to default swagger documentation", {
-        duration: 3000,
-      });
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to reset swagger doc";
-      set({
-        error: errorMessage,
-      });
-      toast.error("Failed to reset swagger doc", {
-        description: errorMessage,
-        duration: 5000,
-      });
-    } finally {
-      set({ loading: false });
-    }
+    get().replaceWithUrl(getDefaultUrl());
   },
 
   // Update groups based on current doc
