@@ -63,6 +63,8 @@ export type SchemaObject = {
   maximum?: number;
   pattern?: string;
   enum?: unknown[];
+  "x-errorMessage"?: string;
+  "x-requiredMessage"?: string;
 };
 
 export type HttpMethod = "get" | "post" | "put" | "delete" | "patch";
