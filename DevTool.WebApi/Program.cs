@@ -16,6 +16,23 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -28,14 +45,17 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/openapi/v1.json", "DevTool API"));
+    app.UseCors();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 // API endpoints
-app.MapWeatherEndpoints();
 app.MapProductEndpoints();
+app.MapCategoryEndpoints();
+app.MapInventoryEndpoints();
+app.MapOrderEndpoints();
 
 app.MapDevToolUi("/_devtool");
 

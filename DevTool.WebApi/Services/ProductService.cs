@@ -26,6 +26,7 @@ public class ProductService(IProductRepository repository) : IProductService
             Description = request.Description,
             Price = request.Price,
             Stock = request.Stock,
+            CategoryId = request.CategoryId,
             CreatedAt = DateTime.UtcNow
         };
         product = await repository.AddAsync(product, ct);
@@ -40,6 +41,7 @@ public class ProductService(IProductRepository repository) : IProductService
             if (request.Description is { } desc) p.Description = desc;
             if (request.Price is { } price) p.Price = price;
             if (request.Stock is { } stock) p.Stock = stock;
+            if (request.CategoryId is { } catId) p.CategoryId = catId;
         }, ct);
         return product is null ? null : ToResponse(product);
     }
@@ -48,5 +50,5 @@ public class ProductService(IProductRepository repository) : IProductService
         repository.DeleteAsync(id, ct);
 
     private static ProductResponse ToResponse(Product p) =>
-        new(p.Id, p.Name, p.Description, p.Price, p.Stock, p.CreatedAt, p.UpdatedAt);
+        new(p.Id, p.Name, p.Description, p.Price, p.Stock, p.CategoryId, p.CreatedAt, p.UpdatedAt);
 }
