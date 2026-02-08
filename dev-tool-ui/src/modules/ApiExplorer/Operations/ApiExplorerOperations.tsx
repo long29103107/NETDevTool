@@ -28,7 +28,7 @@ const ApiExplorerOperations = ({
               className="truncate"
             >
               <span
-                className="inline-flex items-center justify-center font-mono uppercase text-sm min-w-[2.5rem] min-h-[1.25rem] shrink-0 mr-3"
+                className="inline-flex items-center justify-center font-mono uppercase text-sm min-w-[3rem] min-h-[1.25rem] shrink-0 mr-3"
                 style={{ color: getMethodColor(op.method) }}
               >
                 {op.method}

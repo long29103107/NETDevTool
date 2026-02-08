@@ -1,3 +1,5 @@
+using Swashbuckle.AspNetCore.Annotations;
+
 namespace DevTool.WebApi.DTOs;
 
 /// <summary>Represents the inventory status of a product.</summary>
@@ -7,9 +9,17 @@ namespace DevTool.WebApi.DTOs;
 /// <param name="Quantity">The current quantity available in stock. <example>100</example></param>
 /// <param name="Location">The physical location where the stock is stored. <example>Warehouse A</example></param>
 /// <param name="LastUpdated">The date and time when this record was last updated.</param>
-public record InventoryResponse(int Id, int ProductId, string ProductName, int Quantity, string Location, DateTime LastUpdated);
+public record InventoryResponse(
+    [property: SwaggerSchema(Description = "The unique identifier")] int Id, 
+    [property: SwaggerSchema(Description = "Foreign key to Product")] int ProductId, 
+    [property: SwaggerSchema(Description = "The name of the associated product")] string ProductName, 
+    [property: SwaggerSchema(Description = "The current quantity available")] int Quantity, 
+    [property: SwaggerSchema(Description = "The physical location")] string Location, 
+    DateTime LastUpdated);
 
 /// <summary>Request to update the quantity or location of a product's inventory.</summary>
 /// <param name="Quantity">The new quantity. <example>100</example></param>
 /// <param name="Location">The new location. <example>Warehouse A, Aisle 4</example></param>
-public record UpdateInventoryQuantityRequest(int Quantity, string? Location);
+public record UpdateInventoryQuantityRequest(
+    [property: SwaggerSchema(Description = "The new quantity")] int Quantity, 
+    [property: SwaggerSchema(Description = "The new location")] string? Location);

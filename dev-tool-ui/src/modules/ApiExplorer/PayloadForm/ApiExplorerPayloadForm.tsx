@@ -66,6 +66,7 @@ const ApiExplorerPayloadForm = ({
             pathParams={pathParams}
             pathValues={pathValues}
             setPathValues={setPathValues}
+            doc={doc}
           />
         </Section>
       )}
@@ -90,6 +91,7 @@ const ApiExplorerPayloadForm = ({
             queryParams={queryParams}
             queryValues={queryValues}
             setQueryValues={setQueryValues}
+            doc={doc}
           />
         </Section>
       )}

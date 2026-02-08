@@ -1,17 +1,26 @@
+using Swashbuckle.AspNetCore.Annotations;
+
 namespace DevTool.WebApi.DTOs;
 
 /// <summary>Represents a product category.</summary>
 /// <param name="Id">The unique identifier of the category.</param>
 /// <param name="Name">The name of the category. <example>Electronics</example></param>
 /// <param name="Code">A unique code identifying the category. <example>ELEC</example></param>
-public record CategoryResponse(int Id, string Name, string Code);
+public record CategoryResponse(
+    [property: SwaggerSchema(Description = "The unique identifier")] int Id, 
+    [property: SwaggerSchema(Description = "The name of the category")] string Name, 
+    [property: SwaggerSchema(Description = "A unique code identifying the category")] string Code);
 
 /// <summary>Request to create a new category.</summary>
 /// <param name="Name">The name. <example>Electronics</example></param>
 /// <param name="Code">The code. <example>ELEC</example></param>
-public record CreateCategoryRequest(string Name, string Code);
+public record CreateCategoryRequest(
+    [property: SwaggerSchema(Description = "The name of the category")] string Name, 
+    [property: SwaggerSchema(Description = "A unique code identifying the category")] string Code);
 
 /// <summary>Request to update an existing category.</summary>
 /// <param name="Name">The name. <example>Consumer Electronics</example></param>
 /// <param name="Code">The code. <example>CELEC</example></param>
-public record UpdateCategoryRequest(string? Name, string? Code);
+public record UpdateCategoryRequest(
+    [property: SwaggerSchema(Description = "The name of the category")] string? Name, 
+    [property: SwaggerSchema(Description = "A unique code identifying the category")] string? Code);
