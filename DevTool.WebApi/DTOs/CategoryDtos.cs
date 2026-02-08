@@ -1,4 +1,5 @@
 using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace DevTool.WebApi.DTOs;
 
@@ -8,19 +9,19 @@ namespace DevTool.WebApi.DTOs;
 /// <param name="Code">A unique code identifying the category. <example>ELEC</example></param>
 public record CategoryResponse(
     [property: SwaggerSchema(Description = "The unique identifier")] int Id, 
-    [property: SwaggerSchema(Description = "The name of the category")] string Name, 
-    [property: SwaggerSchema(Description = "A unique code identifying the category")] string Code);
+    [property: Required, StringLength(50), SwaggerSchema(Description = "The name of the category")] string Name, 
+    [property: Required, StringLength(10), SwaggerSchema(Description = "A unique code identifying the category")] string Code);
 
 /// <summary>Request to create a new category.</summary>
 /// <param name="Name">The name. <example>Electronics</example></param>
 /// <param name="Code">The code. <example>ELEC</example></param>
 public record CreateCategoryRequest(
-    [property: SwaggerSchema(Description = "The name of the category")] string Name, 
-    [property: SwaggerSchema(Description = "A unique code identifying the category")] string Code);
+    [property: Required, StringLength(50), SwaggerSchema(Description = "The name of the category")] string Name, 
+    [property: Required, StringLength(10), SwaggerSchema(Description = "A unique code identifying the category")] string Code);
 
 /// <summary>Request to update an existing category.</summary>
 /// <param name="Name">The name. <example>Consumer Electronics</example></param>
 /// <param name="Code">The code. <example>CELEC</example></param>
 public record UpdateCategoryRequest(
-    [property: SwaggerSchema(Description = "The name of the category")] string? Name, 
-    [property: SwaggerSchema(Description = "A unique code identifying the category")] string? Code);
+    [property: StringLength(50), SwaggerSchema(Description = "The name of the category")] string? Name, 
+    [property: StringLength(10), SwaggerSchema(Description = "A unique code identifying the category")] string? Code);

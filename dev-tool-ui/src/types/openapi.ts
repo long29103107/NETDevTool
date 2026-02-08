@@ -57,6 +57,12 @@ export type SchemaObject = {
   example?: unknown;
   description?: string;
   $ref?: string;
+  minLength?: number;
+  maxLength?: number;
+  minimum?: number;
+  maximum?: number;
+  pattern?: string;
+  enum?: unknown[];
 };
 
 export type HttpMethod = "get" | "post" | "put" | "delete" | "patch";

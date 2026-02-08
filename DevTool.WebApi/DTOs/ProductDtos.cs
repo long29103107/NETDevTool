@@ -1,4 +1,5 @@
 using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace DevTool.WebApi.DTOs;
 
@@ -13,10 +14,10 @@ namespace DevTool.WebApi.DTOs;
 /// <param name="UpdatedAt">When the product was last updated.</param>
 public record ProductResponse(
     [property: SwaggerSchema(Description = "The unique identifier")] int Id, 
-    [property: SwaggerSchema(Description = "The name of the product")] string Name, 
-    [property: SwaggerSchema(Description = "A brief description")] string? Description, 
-    [property: SwaggerSchema(Description = "The unit price")] decimal Price, 
-    [property: SwaggerSchema(Description = "The current stock level")] int Stock, 
+    [property: Required, StringLength(100), SwaggerSchema(Description = "The name of the product")] string Name, 
+    [property: StringLength(500), SwaggerSchema(Description = "A brief description")] string? Description, 
+    [property: Range(0.01, 10000), SwaggerSchema(Description = "The unit price")] decimal Price, 
+    [property: Range(0, 1000000), SwaggerSchema(Description = "The current stock level")] int Stock, 
     [property: SwaggerSchema(Description = "Foreign key to Category", Format = "int32")] int CategoryId, 
     DateTime CreatedAt, 
     DateTime? UpdatedAt);
@@ -28,10 +29,10 @@ public record ProductResponse(
 /// <param name="Stock">The stock level. <example>50</example></param>
 /// <param name="CategoryId">The category ID. <example>1</example></param>
 public record CreateProductRequest(
-    [property: SwaggerSchema(Description = "The name of the product")] string Name, 
-    [property: SwaggerSchema(Description = "A brief description")] string? Description, 
-    [property: SwaggerSchema(Description = "The unit price")] decimal Price, 
-    [property: SwaggerSchema(Description = "The stock level")] int Stock, 
+    [property: Required, StringLength(100), SwaggerSchema(Description = "The name of the product")] string Name, 
+    [property: StringLength(500), SwaggerSchema(Description = "A brief description")] string? Description, 
+    [property: Range(0.01, 10000), SwaggerSchema(Description = "The unit price")] decimal Price, 
+    [property: Range(0, 1000000), SwaggerSchema(Description = "The stock level")] int Stock, 
     [property: SwaggerSchema(Description = "Foreign key to Category", Format = "int32")] int CategoryId);
 
 /// <summary>Request to update an existing product.</summary>
@@ -41,8 +42,8 @@ public record CreateProductRequest(
 /// <param name="Stock">The stock. <example>45</example></param>
 /// <param name="CategoryId">The category ID. <example>1</example></param>
 public record UpdateProductRequest(
-    [property: SwaggerSchema(Description = "The name of the product")] string? Name, 
-    [property: SwaggerSchema(Description = "A brief description")] string? Description, 
-    [property: SwaggerSchema(Description = "The unit price")] decimal? Price, 
-    [property: SwaggerSchema(Description = "The stock level")] int? Stock, 
+    [property: StringLength(10), SwaggerSchema(Description = "The name of the product")] string? Name, 
+    [property: StringLength(500), SwaggerSchema(Description = "A brief description")] string? Description, 
+    [property: Range(0.01, 10000), SwaggerSchema(Description = "The unit price")] decimal? Price, 
+    [property: Range(0, 1000000), SwaggerSchema(Description = "The stock level")] int? Stock, 
     [property: SwaggerSchema(Description = "Foreign key to Category", Format = "int32")] int? CategoryId);

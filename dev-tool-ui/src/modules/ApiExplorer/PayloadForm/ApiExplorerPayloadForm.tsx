@@ -38,6 +38,7 @@ const ApiExplorerPayloadForm = ({
     buildCurl,
     isPathValid,
     isQueryValid,
+    isBodyValid,
   } = useApiExplorerPayloadForm({ operation, doc });
 
   if (!operation || !doc) {
@@ -48,7 +49,7 @@ const ApiExplorerPayloadForm = ({
     );
   }
 
-  const isValid = isPathValid && isQueryValid;
+  const isValid = isPathValid && isQueryValid && isBodyValid;
 
   return (
     <Form

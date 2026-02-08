@@ -35,7 +35,7 @@ const ApiExplorerPayloadQueryParam = ({
 
   return (
     <section>
-      <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
         {queryParams.map((p) => (
           <QueryParamRow
             key={p.name}

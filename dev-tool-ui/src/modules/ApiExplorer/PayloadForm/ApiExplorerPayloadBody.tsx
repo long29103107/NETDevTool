@@ -75,6 +75,9 @@ const BodyPropRow = ({
 
   const handleBlur = () => setTouched(true);
 
+  const isError = isRequired && (val === undefined || val === null || (typeof val === "string" && val.trim() === ""));
+  const showError = touched && isError;
+
   return (
     <Label className="block">
       <div className="flex justify-between items-center w-full mb-1.5 gap-2">
@@ -111,6 +114,7 @@ const BodyPropRow = ({
           value={val === undefined || val === null ? "" : String(val)}
           options={options}
           disabled={loading}
+          error={showError ? "Required" : undefined}
           onChange={(e) => {
             const v = e.target.value;
             if (type === "integer")
@@ -138,6 +142,7 @@ const BodyPropRow = ({
           type={type === "integer" || type === "number" ? "number" : "text"}
           step={type === "number" ? "any" : undefined}
           value={val === undefined || val === null ? "" : String(val)}
+          error={showError ? "Required" : undefined}
           onChange={(e) => {
             const v = e.target.value;
             if (type === "integer")
@@ -145,6 +150,7 @@ const BodyPropRow = ({
             else if (type === "number")
               updateBody(propKey, v === "" ? undefined : parseFloat(v));
             else updateBody(propKey, v === "" ? undefined : v);
+            setTouched(true);
           }}
           onBlur={handleBlur}
           className="mt-1.5 w-full"

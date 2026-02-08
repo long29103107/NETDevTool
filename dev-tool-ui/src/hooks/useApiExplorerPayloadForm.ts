@@ -33,6 +33,7 @@ export interface UseApiExplorerPayloadFormReturn {
   buildCurl: () => string;
   isPathValid: boolean;
   isQueryValid: boolean;
+  isBodyValid: boolean;
 }
 
 export function useApiExplorerPayloadForm({
@@ -302,6 +303,17 @@ export function useApiExplorerPayloadForm({
     return val !== undefined && val !== null && strVal !== "";
   });
 
+  const isBodyValid = ((): boolean => {
+    if (!hasBody || !schema?.properties) return true;
+    const required = schema.required ?? [];
+    return required.every((key) => {
+      const val = bodyValues[key];
+      if (val === undefined || val === null) return false;
+      if (typeof val === "string" && val.trim() === "") return false;
+      return true;
+    });
+  })();
+
   return {
     pathValues,
     setPathValues,
@@ -324,5 +336,6 @@ export function useApiExplorerPayloadForm({
     buildCurl,
     isPathValid,
     isQueryValid,
+    isBodyValid,
   };
 }
