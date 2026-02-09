@@ -52,7 +52,11 @@ export function useApiExplorerPayloadForm({
   const [submitting, setSubmitting] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
 
-  const pathParams = operation?.parameters.filter((p) => p.in === "path") ?? [];
+  // Path params are always required in OpenAPI; normalize so required is true unless explicitly false
+  const pathParams = (operation?.parameters.filter((p) => p.in === "path") ?? []).map((p) => ({
+    ...p,
+    required: p.required !== false,
+  }));
   const queryParams =
     operation?.parameters.filter((p) => p.in === "query") ?? [];
   const schema =
@@ -291,8 +295,10 @@ export function useApiExplorerPayloadForm({
     return curl;
   }, [operation, doc, baseUrl, buildPath, buildQuery, hasBody, bodyKeys, bodyValues]);
 
+  // Path params are always required in OpenAPI; treat as required if not explicitly false
   const isPathValid = pathParams.every((p) => {
-    return !validateField(pathValues[p.name], p.schema as SchemaObject, p.required);
+    const required = p.required !== false;
+    return !validateField(pathValues[p.name], p.schema as SchemaObject, required);
   });
 
   const isQueryValid = queryParams.every((p) => {

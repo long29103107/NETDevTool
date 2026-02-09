@@ -50,6 +50,8 @@ const ApiExplorerPayloadForm = ({
   }
 
   const isValid = isPathValid && isQueryValid && isBodyValid;
+  // Load data only needs path + query required fields filled (body is populated by the load)
+  const canEnableLoadData = isPathValid && isQueryValid;
 
   return (
     <Form
@@ -77,7 +79,7 @@ const ApiExplorerPayloadForm = ({
           <Button
             type="button"
             variant="secondary"
-            disabled={submitting || loadingData || !isValid}
+            disabled={submitting || loadingData || !canEnableLoadData}
             onClick={loadData}
           >
             {loadingData ? "Loading…" : "Load data"}
