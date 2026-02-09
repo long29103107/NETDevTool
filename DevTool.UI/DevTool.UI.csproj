@@ -1,17 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>DevTool.UI</RootNamespace>
 
-    <!-- NuGet package -->
+    <!-- NuGet metadata -->
     <IsPackable>true</IsPackable>
-    <PackageId>DevTool.UI</PackageId>
+    <PackageId>NETDevTool</PackageId>
     <Version>1.0.0</Version>
-    <Authors>NETDevTool</Authors>
-    <Description>ASP.NET Core host and UI for the API Explorer dev tool. Serves a React SPA that loads OpenAPI/Swagger from your API, lets you try operations with JWT auth, path/query/body forms, and foreign-key dropdowns.</Description>
+    <Authors>long29103107</Authors>
+    <Company>Long</Company>
+    <Description>Developer tool UI for ASP.NET Core</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/long29103107/NETDevTool</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/long29103107/NETDevTool</PackageProjectUrl>
     <PackageTags>aspnetcore;openapi;swagger;api-explorer;dev-tool;spa</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
