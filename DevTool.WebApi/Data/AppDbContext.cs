@@ -45,7 +45,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(o => o.TotalAmount).HasPrecision(18, 2);
             e.HasMany(o => o.Items)
              .WithOne(i => i.Order)
-             .HasForeignKey(i => i.OrderId);
+             .HasForeignKey(i => i.OrderId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

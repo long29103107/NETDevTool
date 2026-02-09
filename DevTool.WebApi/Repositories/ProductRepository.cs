@@ -1,5 +1,6 @@
 using DevTool.WebApi.Data;
 using DevTool.WebApi.Entities;
+using DevTool.WebApi.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevTool.WebApi.Repositories;
@@ -38,7 +39,7 @@ public class ProductRepository(AppDbContext db) : IProductRepository
     public async Task<Product?> UpdateAsync(int id, Action<Product> update, CancellationToken ct = default)
     {
         var product = await db.Products.FindAsync([id], ct);
-        if (product is null) return null;
+        if (product is null) throw new EntityNotFoundException("Product", id);
         update(product);
         product.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
@@ -48,7 +49,7 @@ public class ProductRepository(AppDbContext db) : IProductRepository
     public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
     {
         var product = await db.Products.FindAsync([id], ct);
-        if (product is null) return false;
+        if (product is null) throw new EntityNotFoundException("Product", id);
         db.Products.Remove(product);
         await db.SaveChangesAsync(ct);
         return true;

@@ -1,6 +1,7 @@
 using DevTool.UI.Middleware;
 using DevTool.WebApi.Data;
 using DevTool.WebApi.Endpoints;
+using DevTool.WebApi.Exceptions;
 using DevTool.WebApi.Repositories;
 using DevTool.WebApi.Services;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +56,31 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+        if (exception is EntityNotFoundException enf)
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { detail = enf.Message });
+            return;
+        }
+        if (exception is InvalidOperationException ioe)
+        {
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { detail = ioe.Message });
+            return;
+        }
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new { detail = "An error occurred." });
+    });
+});
 
 // API endpoints
 app.MapProductEndpoints();

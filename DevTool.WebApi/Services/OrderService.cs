@@ -50,7 +50,45 @@ public class OrderService(IOrderRepository repository, IProductRepository produc
         return ToResponse(order);
     }
 
+    public async Task<IReadOnlyList<OrderItemResponse>?> GetItemsByOrderIdAsync(int orderId, CancellationToken ct = default)
+    {
+        var items = await repository.GetItemsByOrderIdAsync(orderId, ct);
+        return items?.Select(ToItemResponse).ToList();
+    }
+
+    public async Task<OrderItemResponse?> GetItemByOrderIdAndItemIdAsync(int orderId, int itemId, CancellationToken ct = default)
+    {
+        var item = await repository.GetItemByOrderIdAndItemIdAsync(orderId, itemId, ct);
+        return item is null ? null : ToItemResponse(item);
+    }
+
+    public async Task<(OrderItemResponse? Item, bool OrderFound, bool ProductFound)> AddItemToOrderAsync(int orderId, CreateOrderItemRequest request, CancellationToken ct = default)
+    {
+        var product = await productRepository.GetByIdAsync(request.ProductId, ct);
+        if (product is null) return (null, true, false);
+
+        var item = new OrderItem
+        {
+            ProductId = request.ProductId,
+            Quantity = request.Quantity,
+            UnitPrice = product.Price
+        };
+
+        var added = await repository.AddItemAsync(orderId, item, ct);
+        if (added is null) return (null, false, true);
+        return (new OrderItemResponse(added.Id, added.ProductId, product.Name, added.Quantity, added.UnitPrice), true, true);
+    }
+
+    public Task DeleteAsync(int orderId, CancellationToken ct = default) =>
+        repository.DeleteAsync(orderId, ct);
+
+    public Task DeleteItemAsync(int orderId, int itemId, CancellationToken ct = default) =>
+        repository.DeleteItemAsync(orderId, itemId, ct);
+
     private static OrderResponse ToResponse(Order o) =>
         new(o.Id, o.OrderDate, o.TotalAmount, o.CustomerName,
-            o.Items.Select(i => new OrderItemResponse(i.Id, i.ProductId, i.Product?.Name ?? "Unknown", i.Quantity, i.UnitPrice)).ToList());
+            o.Items.Select(ToItemResponse).ToList());
+
+    private static OrderItemResponse ToItemResponse(OrderItem i) =>
+        new(i.Id, i.ProductId, i.Product?.Name ?? "Unknown", i.Quantity, i.UnitPrice);
 }

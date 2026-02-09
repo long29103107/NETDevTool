@@ -9,7 +9,7 @@ function getStatusColor(status: number): string {
   if (status <= 0) return "text-[rgba(255,255,255,0.5)]";
   if (status >= 200 && status < 300) return "text-emerald-400";
   if (status >= 300 && status < 400) return "text-sky-400";
-  if (status >= 400 && status < 500) return "text-amber-400";
+  if (status >= 400 && status < 500) return "text-red-400";
   if (status >= 500) return "text-red-400";
   return "text-[rgba(255,255,255,0.5)]";
 }

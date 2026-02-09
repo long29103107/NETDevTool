@@ -101,7 +101,7 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
     get().replaceWithUrl(getDefaultUrl());
   },
 
-  // Update groups based on current doc
+  // Update groups based on current doc; default to first group, first operation, first payload
   updateGroups: () => {
     const { doc } = get();
     if (!doc) {
@@ -111,12 +111,14 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
 
     const byTag = groupOperationsByTag(doc);
     const sortedGroups = Array.from(byTag.keys()).sort();
-    const firstGroup = sortedGroups[0] || null;
+    const firstGroup = sortedGroups[0] ?? null;
+    const firstGroupOps = firstGroup ? byTag.get(firstGroup) ?? [] : [];
+    const firstOperation = firstGroupOps[0] ?? null;
 
     set({
       groups: sortedGroups,
       selectedGroup: firstGroup,
-      selectedOperation: null,
+      selectedOperation: firstOperation,
     });
   },
 
