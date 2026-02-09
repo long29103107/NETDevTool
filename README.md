@@ -1,17 +1,22 @@
-# DevTool.WebApi
+# NETDevTool
 
-Sample ASP.NET Core API that hosts the **API Explorer** dev tool at `/_devtool`. Use this project as a reference for adding the dev tool to your own API.
+**LonG.DevTool** is a developer tool UI for ASP.NET Core: an in-browser **API Explorer** that loads your OpenAPI/Swagger document and lets you try operations (path, query, body, JWT, foreign-key dropdowns) without leaving the app.
+
+- **NuGet:** [LonG.DevTool](https://www.nuget.org/packages/LonG.DevTool)
+- **Install:** `dotnet add package LonG.DevTool --version 1.0.0`
 
 ---
 
 ## Purpose
 
-This project demonstrates:
+- **API Explorer SPA** – Single-page app served at a path (e.g. `/_devtool`) that:
+  - Loads your API’s OpenAPI (Swagger) JSON from the same host
+  - Lists operations by tag/group
+  - Lets you fill path/query/body, send requests, and view responses
+  - Supports JWT (set token, “Apply JWT from response” after login)
+  - Shows foreign-key dropdowns when schema uses “Foreign key to &lt;Entity&gt;”
 
-- A minimal API with OpenAPI/Swagger, JWT auth, and CRUD-style endpoints (Categories, Products, Orders, Inventory, Auth).
-- Integration of **DevTool.UI**: the API Explorer SPA is served at `/_devtool` and loads this API’s OpenAPI document so you can browse and try operations (path/query/body, JWT, foreign-key dropdowns) from the browser.
-
-You can copy the integration pattern into any ASP.NET Core app to get the same Explorer UI for your API.
+- **Drop-in for any ASP.NET Core API** – Add the package, expose OpenAPI, call `MapDevToolUi("/_devtool")`, and open `/_devtool` in the browser. No separate Swagger UI host required.
 
 ---
 
@@ -19,119 +24,208 @@ You can copy the integration pattern into any ASP.NET Core app to get the same E
 
 | Layer | Technology |
 |--------|------------|
-| **Runtime** | .NET 10 |
-| **API** | ASP.NET Core minimal APIs, `Microsoft.AspNetCore.OpenApi`, `MapOpenApi()` |
-| **OpenAPI / Swagger** | `Swashbuckle.AspNetCore`, `Swashbuckle.AspNetCore.Annotations` |
-| **Auth** | JWT Bearer (`Microsoft.AspNetCore.Authentication.JwtBearer`, `System.IdentityModel.Tokens.Jwt`) |
-| **Data** | Entity Framework Core, InMemory provider |
-| **Dev tool UI** | **DevTool.UI** (project reference): React SPA + middleware to serve it and fetch/cache OpenAPI |
+| **Package** | LonG.DevTool 1.0.0 (.NET 10) |
+| **Host** | ASP.NET Core (minimal API or controllers) |
+| **OpenAPI** | `Microsoft.AspNetCore.OpenApi`, `MapOpenApi()` and/or `Swashbuckle.AspNetCore` |
+| **UI** | React SPA (pre-built in package) + middleware to serve it and fetch/cache OpenAPI |
 
-The API Explorer UI itself is a React app (see `dev-tool-ui/`) built with Bun, React, Tailwind, and Zustand; it is built and packaged by the **DevTool.UI** project.
+The Explorer UI is built with React, Tailwind, and Zustand; the package ships the built assets under `wwwroot/dev-tool-ui`. The middleware resolves them from the assembly location when you reference the NuGet package.
 
 ---
 
-## How to implement the dev tool in a new project
+## Step-by-step: Add the dev tool to your API
 
-Follow these steps to add the API Explorer at `/_devtool` to your own ASP.NET Core API.
+You can use either **controllers** or **minimal APIs** (or both). The steps are the same; only how you define endpoints differs.
 
-### Step 1: Expose OpenAPI (Swagger) from your API
+### Prerequisites
 
-Your API must expose an OpenAPI (Swagger) JSON document so the Explorer can discover operations.
+- .NET 10 (or the TFM your app targets)
+- An ASP.NET Core Web API project
 
-**Option A – OpenAPI with `MapOpenApi()` (recommended)**
+---
 
-- Add the OpenAPI package and map the document:
+### Option A – Controller-based API
 
-  ```csharp
-  builder.Services.AddOpenApi();
-  builder.Services.AddEndpointsApiExplorer();
-  // ...
-  app.MapOpenApi();  // e.g. exposes /openapi/v1.json
-  ```
+This mirrors the **Sample.Api** project in this repo (see `Sample.Api/`).
 
-- If you also use Swashbuckle for Swagger UI:
+#### 1. Add packages
 
-  ```csharp
-  builder.Services.AddSwaggerGen(c => { /* optional config */ });
-  app.UseSwagger();
-  app.UseSwaggerUI(c => c.SwaggerEndpoint("/openapi/v1.json", "My API"));
-  ```
+```bash
+dotnet add package LonG.DevTool --version 1.0.0
+dotnet add package Microsoft.AspNetCore.OpenApi
+dotnet add package Swashbuckle.AspNetCore
+```
 
-**Option B – Swashbuckle only**
+Or in the project file:
 
-- Add `Swashbuckle.AspNetCore` and optionally `Swashbuckle.AspNetCore.Annotations`.
-- Register Swagger and Swagger UI. The document is usually at `/swagger/v1/swagger.json` (or the document name you configure).
+```xml
+<ItemGroup>
+  <PackageReference Include="LonG.DevTool" Version="1.0.0" />
+  <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+  <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.2" />
+</ItemGroup>
+```
 
-Note the URL of your OpenAPI document (e.g. `https://localhost:5001/openapi/v1.json` or `https://localhost:5001/swagger/v1/swagger.json`). You will use it in Step 3.
+#### 2. Register OpenAPI and controllers
 
-### Step 2: Reference DevTool.UI and copy the UI assets
+In `Program.cs`:
 
-- Add a **project reference** to DevTool.UI (or reference the DevTool.UI NuGet package once published):
+```csharp
+builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+```
 
-  ```xml
-  <ItemGroup>
-    <ProjectReference Include="..\DevTool.UI\DevTool.UI.csproj" />
-  </ItemGroup>
-  ```
+#### 3. Map OpenAPI and Swagger UI (e.g. in Development)
 
-- Ensure the DevTool UI static files are available in your app’s output. With a project reference, use a build target that copies DevTool.UI’s built `wwwroot` into your output:
+```csharp
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();  // exposes /openapi/v1.json
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/openapi/v1.json", "My API"));
+}
+```
 
-  ```xml
-  <Target Name="CopyDevToolWwwRoot" AfterTargets="Build">
-    <PropertyGroup>
-      <DevToolUiWwwRoot>$(MSBuildProjectDirectory)\..\DevTool.UI\bin\$(Configuration)\$(TargetFramework)\wwwroot</DevToolUiWwwRoot>
-    </PropertyGroup>
-    <ItemGroup>
-      <DevToolWwwFiles Include="$(DevToolUiWwwRoot)\**\*" Condition="Exists('$(DevToolUiWwwRoot)')" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DevToolWwwFiles)" DestinationFiles="@(DevToolWwwFiles->'$(OutputPath)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" Condition="Exists('$(DevToolUiWwwRoot)')" />
-  </Target>
-  ```
+#### 4. Add static files and the DevTool UI
 
-  Build **DevTool.UI** at least once first so it produces `wwwroot` (it builds the frontend and copies it into `wwwroot/dev-tool-ui`).
+```csharp
+app.UseStaticFiles();
+app.MapDevToolUi("/_devtool");   // requires: using DevTool.UI.Middleware;
+app.MapControllers();
 
-### Step 3: Map the DevTool UI in your pipeline
+app.Run();
+```
 
-- In `Program.cs`, add the `DevTool.UI.Middleware` namespace and call `MapDevToolUi` with the path where you want the Explorer (e.g. `/_devtool`) and the OpenAPI URL used by your app:
+#### 5. Define a controller (example)
 
-  ```csharp
-  using DevTool.UI.Middleware;
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class ProductController : ControllerBase
+{
+    [HttpGet]
+    public ActionResult<IEnumerable<Product>> GetAll() => Ok(products);
 
-  // After UseStaticFiles(), UseAuthentication(), UseAuthorization(), and your API mappings:
-  app.MapDevToolUi("/_devtool", "index.html", opts =>
-  {
-      opts.OpenApiPath = "/openapi/v1.json";   // or "/swagger/v1/swagger.json" if using Swashbuckle only
-      opts.SwaggerJsonFileName = "swagger.json";
-  });
+    [HttpGet("{id:int}")]
+    public ActionResult<Product> GetById(int id) => ...
+}
+```
 
-  app.Run();
-  ```
+#### 6. Run and open the Explorer
 
-- `OpenApiPath` must match the URL path of your OpenAPI document on the same host. The middleware fetches it from the current request’s host (e.g. `https://localhost:5001/openapi/v1.json`) and caches it in your app’s `wwwroot` so the SPA can load it.
+- Run the app (`dotnet run` or F5).
+- Open `https://localhost:<port>/_devtool`.
+- The Explorer loads `/openapi/v1.json` and lists your controller actions; you can try them from the UI.
 
-### Step 4: Run and open the Explorer
+---
 
-- Run your API (e.g. `dotnet run` or F5).
-- Open `https://localhost:<port>/_devtool` in the browser. The Explorer loads your OpenAPI document and lists your operations; you can try them with path/query/body, set JWT in the Authorize panel, and use “Apply JWT from response” after login if you expose a login endpoint.
+### Option B – Minimal API
 
-### Step 5 (optional): Foreign-key dropdowns in the Explorer
+Same package and OpenAPI setup; endpoints are defined with `MapGet`, `MapPost`, `MapGroup`, etc. (see **Sample.Api** `Endpoints/CategoryEndpoints.cs`).
 
-For request body or path parameters that are foreign keys (e.g. `categoryId`, `productId`), the Explorer can show a dropdown filled from a list endpoint instead of a number input.
+#### 1. Add packages
 
-- In your OpenAPI schema, set the **description** of that property to the pattern: `Foreign key to <EntityName>` (e.g. `Foreign key to Category`). With Swashbuckle annotations you can do:
+Same as Option A:
 
-  ```csharp
-  [property: SwaggerSchema(Description = "Foreign key to Category")] int CategoryId
-  ```
+```bash
+dotnet add package LonG.DevTool --version 1.0.0
+dotnet add package Microsoft.AspNetCore.OpenApi
+dotnet add package Swashbuckle.AspNetCore
+```
 
-- The Explorer looks for a GET list endpoint for that entity (e.g. `/api/categories` for “Category”) and uses it to build the options. Ensure your API exposes a GET endpoint that returns an array of items with `id` and a label field (`name`, `title`, or `code`).
+#### 2. Register OpenAPI and map endpoints
+
+In `Program.cs`:
+
+```csharp
+builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
+builder.Services.AddEndpointsApiExplorer();
+```
+
+#### 3. Map OpenAPI and Swagger UI (e.g. in Development)
+
+```csharp
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/openapi/v1.json", "My API"));
+}
+```
+
+#### 4. Add static files and the DevTool UI
+
+```csharp
+app.UseStaticFiles();
+app.MapDevToolUi("/_devtool");   // using DevTool.UI.Middleware;
+
+app.MapGet("/api/hello", () => Results.Ok(new { message = "Hello" }));
+
+// Or use extension method for a group:
+app.MapCategoryEndpoints();
+
+app.Run();
+```
+
+#### 5. Define minimal endpoints (example)
+
+```csharp
+// Endpoints/CategoryEndpoints.cs
+public static void MapCategoryEndpoints(this WebApplication app)
+{
+    var group = app.MapGroup("/api/category").WithTags("Category");
+    group.MapGet("", () => Results.Ok(categories));
+    group.MapGet("{id:int}", (int id) => ...);
+}
+```
+
+#### 6. Run and open the Explorer
+
+- Run the app and open `https://localhost:<port>/_devtool`.
+- The Explorer uses `/openapi/v1.json` and lists your minimal API endpoints.
+
+---
+
+### Customizing the OpenAPI path (optional)
+
+If your OpenAPI document is at a different path (e.g. Swashbuckle-only at `/swagger/v1/swagger.json`):
+
+```csharp
+app.MapDevToolUi("/_devtool", "index.html", opts =>
+{
+    opts.OpenApiPath = "/swagger/v1/swagger.json";
+    opts.SwaggerJsonFileName = "swagger.json";
+});
+```
+
+---
+
+### Optional: Foreign-key dropdowns
+
+For body or path parameters that are foreign keys (e.g. `categoryId`), the Explorer can show a dropdown filled from a list endpoint:
+
+- In your OpenAPI schema, set the property **description** to `Foreign key to <EntityName>` (e.g. `Foreign key to Category`).
+- Expose a GET list endpoint for that entity (e.g. `GET /api/categories`) returning an array with `id` and a label field (`name`, `title`, or `code`).
+
+See **DevTool.WebApi** and its DTOs for `[SwaggerSchema(Description = "Foreign key to Category")]` examples.
 
 ---
 
 ## Project layout (this repo)
 
-- **DevTool.WebApi** – This project: sample API + dev tool integration.
-- **DevTool.UI** – ASP.NET Core host and NuGet package for the Explorer; builds the frontend and provides `MapDevToolUi` and options.
-- **dev-tool-ui** – React (Bun + Tailwind) app: API Explorer UI source.
+| Project | Description |
+|--------|-------------|
+| **Sample.Api** | Sample API using the **LonG.DevTool** NuGet package with both controllers and minimal API endpoints. |
+| **DevTool.WebApi** | Full sample with OpenAPI, JWT, EF Core, and dev tool integration (project reference). |
+| **DevTool.UI** | Source for the NuGet package: builds the React SPA and produces the `LonG.DevTool` package. |
+| **dev-tool-ui** | React (Bun + Tailwind) app: API Explorer UI source. |
 
-For more on the UI package (contents, building the package, standalone usage), see **DevTool.UI/README.md**.
+- To **use** the dev tool in your app: install [LonG.DevTool](https://www.nuget.org/packages/LonG.DevTool) and follow the steps above.
+- To **build or publish** the package: see **DevTool.UI/README.md**.
+
+---
+
+## License
+
+MIT. See repository license.

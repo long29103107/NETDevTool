@@ -65,6 +65,9 @@ public static class SpaFallbackExtensions
     /// Use inside a Map branch after UseStaticFiles(); the branch's IApplicationBuilder is not an IEndpointRouteBuilder, so MapFallbackToFile is never registered without this.
     /// When basePath is set (e.g. "/_devtool"), injects a &lt;base href="basePath/"&gt; so relative assets and React Router resolve correctly under the subpath.
     /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <param name="fallbackFile">The fallback file name (e.g. index.html).</param>
+    /// <param name="basePath">Optional base path for the SPA (e.g. /_devtool).</param>
     /// <param name="wwwRootPath">Optional wwwroot directory for the SPA fallback file.</param>
     private static IApplicationBuilder UseSpaFallback(this IApplicationBuilder app, string fallbackFile = "index.html", string? basePath = null, string? wwwRootPath = null)
     {
@@ -122,12 +125,18 @@ public static class SpaFallbackExtensions
     /// Maps the DevTool UI SPA at the given path (e.g. "/_devtool"). Serves static files from DevTool.UI project wwwroot and falls back to index.html for client-side routing.
     /// wwwRoot is always ...\DevTool.UI\wwwroot (resolved from source path). Allows access to /_devtool and /_devtool/* for React Router DOM.
     /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <param name="path">The path to mount the UI (e.g. /_devtool).</param>
+    /// <param name="fallbackFile">The SPA fallback file name (e.g. index.html).</param>
     public static IApplicationBuilder MapDevToolUi(this IApplicationBuilder app, string path = "/_devtool", string fallbackFile = "index.html")
         => MapDevToolUi(app, path, fallbackFile, new SwaggerJsonOptions());
 
     /// <summary>
     /// Maps the DevTool UI SPA at the given path with configurable Swagger/OpenAPI JSON mapping.
     /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <param name="path">The path to mount the UI (e.g. /_devtool).</param>
+    /// <param name="fallbackFile">The SPA fallback file name (e.g. index.html).</param>
     /// <param name="configureSwagger">Optional action to configure where and how swagger.json is cached and fetched.</param>
     public static IApplicationBuilder MapDevToolUi(this IApplicationBuilder app, string path, string fallbackFile, Action<SwaggerJsonOptions>? configureSwagger)
     {
