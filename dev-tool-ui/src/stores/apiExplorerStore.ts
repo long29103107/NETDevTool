@@ -24,6 +24,9 @@ interface ApiExplorerState {
   swaggerUrl: string;
   isLoadingUrl: boolean;
 
+  // Auth (JWT)
+  authToken: string | null;
+
   // Actions
   initializeDoc: () => void;
   replaceWithUrl: (url: string) => Promise<void>;
@@ -32,6 +35,7 @@ interface ApiExplorerState {
   setSelectedOperation: (operation: OperationInfo | null) => void;
   setContentHeight: (height: number | null) => void;
   setSwaggerUrl: (url: string) => void;
+  setAuthToken: (token: string | null) => void;
   updateGroups: () => void;
 }
 
@@ -46,6 +50,7 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
   contentHeight: null,
   swaggerUrl: "",
   isLoadingUrl: false,
+  authToken: null,
 
   // Initialize doc from API
   initializeDoc: () => {
@@ -137,5 +142,9 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
 
   setSwaggerUrl: (url: string) => {
     set({ swaggerUrl: url });
+  },
+
+  setAuthToken: (token: string | null) => {
+    set({ authToken: token && token.trim() ? token.trim() : null });
   },
 }));

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import type { OpenApiDoc, OperationInfo, SchemaObject } from "@/types/openapi";
+import { useApiExplorerStore } from "@/stores/apiExplorerStore";
 import {
   buildExampleFromSchema,
   getRequestBodySchema,
@@ -38,10 +39,18 @@ export interface UseApiExplorerPayloadFormReturn {
   isBodyValid: boolean;
 }
 
+function buildHeaders(hasBody: boolean, authToken: string | null): HeadersInit | undefined {
+  const headers: Record<string, string> = {};
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+  if (hasBody) headers["Content-Type"] = "application/json";
+  return Object.keys(headers).length > 0 ? headers : undefined;
+}
+
 export function useApiExplorerPayloadForm({
   operation,
   doc,
 }: UseApiExplorerPayloadFormParams): UseApiExplorerPayloadFormReturn {
+  const authToken = useApiExplorerStore((s) => s.authToken);
   const [pathValues, setPathValues] = useState<Record<string, string>>({});
   const [queryValues, setQueryValues] = useState<Record<string, string>>({});
   const [bodyValues, setBodyValues] = useState<Record<string, unknown>>({});
@@ -145,7 +154,7 @@ export function useApiExplorerPayloadForm({
         const url = `${baseUrl}${path}${query}`;
         const opts: RequestInit = {
           method: operation.method.toUpperCase(),
-          headers: hasBody ? { "Content-Type": "application/json" } : undefined,
+          headers: buildHeaders(hasBody, authToken),
           body:
             hasBody && bodyKeys.length > 0
               ? JSON.stringify(bodyValues)
@@ -202,6 +211,7 @@ export function useApiExplorerPayloadForm({
       hasBody,
       bodyKeys.length,
       bodyValues,
+      authToken,
     ]
   );
 
@@ -232,7 +242,8 @@ export function useApiExplorerPayloadForm({
       const query = buildQuery();
       const url = `${baseUrl}${path}${query}`;
       loadingToastId = toast.loading("Loading data…");
-      const res = await fetch(url, { method: "GET" });
+      const headers = buildHeaders(false, authToken);
+      const res = await fetch(url, { method: "GET", headers });
       const text = await res.text();
       if (!res.ok) {
         setResponse({ status: res.status, data: text });
@@ -268,7 +279,7 @@ export function useApiExplorerPayloadForm({
     } finally {
       setLoadingData(false);
     }
-  }, [operation, doc, canLoadData, baseUrl, buildPath, buildQuery]);
+  }, [operation, doc, canLoadData, baseUrl, buildPath, buildQuery, authToken]);
 
   const buildCurl = useCallback((): string => {
     if (!operation || !doc) return "";
@@ -280,6 +291,9 @@ export function useApiExplorerPayloadForm({
     let curl = `curl -X ${method} "${url}"`;
     
     // Headers
+    if (authToken) {
+      curl += ` \\\n  -H "Authorization: Bearer ${authToken.replace(/"/g, '\\"')}"`;
+    }
     if (hasBody) {
         curl += ` \\\n  -H "Content-Type: application/json"`;
     }
@@ -293,7 +307,7 @@ export function useApiExplorerPayloadForm({
     }
     
     return curl;
-  }, [operation, doc, baseUrl, buildPath, buildQuery, hasBody, bodyKeys, bodyValues]);
+  }, [operation, doc, baseUrl, buildPath, buildQuery, hasBody, bodyKeys, bodyValues, authToken]);
 
   // Path params are always required in OpenAPI; treat as required if not explicitly false
   const isPathValid = pathParams.every((p) => {

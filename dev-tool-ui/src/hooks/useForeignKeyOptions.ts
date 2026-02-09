@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { OpenApiDoc, SchemaObject } from "../types/openapi";
 import type { SelectOption } from "../components/Select";
+import { useApiExplorerStore } from "@/stores/apiExplorerStore";
 
 /**
  * Custom hook to detect foreign key relationships in schema descriptions
@@ -10,6 +11,7 @@ export function useForeignKeyOptions(
   schema: SchemaObject | undefined,
   doc: OpenApiDoc | null
 ) {
+  const authToken = useApiExplorerStore((s) => s.authToken);
   const [options, setOptions] = useState<SelectOption[] | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -79,7 +81,9 @@ export function useForeignKeyOptions(
         }
 
         const baseUrl = window.location.origin;
-        const response = await fetch(`${baseUrl}${targetPath}`);
+        const headers: HeadersInit = {};
+        if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+        const response = await fetch(`${baseUrl}${targetPath}`, { headers });
         if (!response.ok) throw new Error("Failed to fetch options");
 
         const data = await response.json();
@@ -101,7 +105,7 @@ export function useForeignKeyOptions(
     };
 
     fetchOptions();
-  }, [schema?.description, doc]);
+  }, [schema?.description, doc, authToken]);
 
   return { options, loading };
 }
