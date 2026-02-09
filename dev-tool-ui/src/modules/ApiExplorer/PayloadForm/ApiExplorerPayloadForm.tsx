@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/Button";
 import { Form } from "@/components/Form";
 import type { OpenApiDoc, OperationInfo, SchemaObject } from "@/types/openapi";
@@ -9,6 +10,11 @@ import ApiExplorerPayloadResponse from "./ApiExplorerPayloadResponse";
 import { useApiExplorerPayloadForm } from "../../../hooks/useApiExplorerPayloadForm";
 import { useCopy } from "@/hooks/useCopy";
 
+function isLoginOperation(operation: OperationInfo | null): boolean {
+  if (!operation) return false;
+  return operation.operationId === "Login" || operation.path.toLowerCase().includes("auth/login");
+}
+
 export interface ApiExplorerPayloadFormProps {
   operation: OperationInfo | null;
   doc: OpenApiDoc | null;
@@ -18,6 +24,7 @@ const ApiExplorerPayloadForm = ({
   operation,
   doc,
 }: ApiExplorerPayloadFormProps) => {
+  const [applyJwtFromResponse, setApplyJwtFromResponse] = useState(true);
   const {
     pathValues,
     setPathValues,
@@ -39,7 +46,7 @@ const ApiExplorerPayloadForm = ({
     isPathValid,
     isQueryValid,
     isBodyValid,
-  } = useApiExplorerPayloadForm({ operation, doc });
+  } = useApiExplorerPayloadForm({ operation, doc, applyJwtFromResponse });
 
   if (!operation || !doc) {
     return (
@@ -115,15 +122,28 @@ const ApiExplorerPayloadForm = ({
         </Section>
       )}
 
-      <div className="pt-4 border-t border-[rgba(255,255,255,0.1)] flex gap-2 flex-shrink-0">
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={submitting || !isValid}
-        >
-          {submitting ? "Sending…" : "Submit"}
-        </Button>
-        <CopyCurlButton buildCurl={buildCurl} />
+      <div className="pt-4 border-t border-[rgba(255,255,255,0.1)] flex flex-wrap items-center gap-4 flex-shrink-0">
+        <div className="flex gap-2">
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={submitting || !isValid}
+          >
+            {submitting ? "Sending…" : "Submit"}
+          </Button>
+          <CopyCurlButton buildCurl={buildCurl} />
+        </div>
+        {isLoginOperation(operation) && (
+          <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-[rgba(255,255,255,0.8)]">
+            <input
+              type="checkbox"
+              checked={applyJwtFromResponse}
+              onChange={(e) => setApplyJwtFromResponse(e.target.checked)}
+              className="rounded border-[rgba(255,255,255,0.3)] bg-[#1a1a1a] text-[#646cff] focus:ring-[#646cff]"
+            />
+            Apply JWT from response
+          </label>
+        )}
       </div>
 
       {response && (

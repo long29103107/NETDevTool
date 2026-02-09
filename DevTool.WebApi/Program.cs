@@ -1,11 +1,13 @@
+using System.Text;
 using DevTool.UI.Middleware;
 using DevTool.WebApi.Data;
 using DevTool.WebApi.Endpoints;
 using DevTool.WebApi.Exceptions;
 using DevTool.WebApi.Repositories;
 using DevTool.WebApi.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
@@ -28,6 +30,33 @@ builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "DevTool-Simulate-Secret-Key-Min32CharsLong!";
+var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+if (keyBytes.Length < 32) Array.Resize(ref keyBytes, 32);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "DevTool.WebApi",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "DevTool.Client",
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
 {
@@ -57,6 +86,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseExceptionHandler(exceptionHandlerApp =>
 {
     exceptionHandlerApp.Run(async context =>
@@ -83,6 +115,7 @@ app.UseExceptionHandler(exceptionHandlerApp =>
 });
 
 // API endpoints
+app.MapAuthEndpoints();
 app.MapProductEndpoints();
 app.MapCategoryEndpoints();
 app.MapInventoryEndpoints();

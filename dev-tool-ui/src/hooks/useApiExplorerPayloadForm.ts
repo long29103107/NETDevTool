@@ -12,6 +12,8 @@ import { validateField } from "@/utils/validation";
 export interface UseApiExplorerPayloadFormParams {
   operation: OperationInfo | null;
   doc: OpenApiDoc | null;
+  /** When true and the request is login and response has a token, apply it to Authorize. */
+  applyJwtFromResponse?: boolean;
 }
 
 export interface UseApiExplorerPayloadFormReturn {
@@ -46,11 +48,18 @@ function buildHeaders(hasBody: boolean, authToken: string | null): HeadersInit |
   return Object.keys(headers).length > 0 ? headers : undefined;
 }
 
+function isLoginOperation(operation: OperationInfo | null): boolean {
+  if (!operation) return false;
+  return operation.operationId === "Login" || operation.path.toLowerCase().includes("auth/login");
+}
+
 export function useApiExplorerPayloadForm({
   operation,
   doc,
+  applyJwtFromResponse = false,
 }: UseApiExplorerPayloadFormParams): UseApiExplorerPayloadFormReturn {
   const authToken = useApiExplorerStore((s) => s.authToken);
+  const setAuthToken = useApiExplorerStore((s) => s.setAuthToken);
   const [pathValues, setPathValues] = useState<Record<string, string>>({});
   const [queryValues, setQueryValues] = useState<Record<string, string>>({});
   const [bodyValues, setBodyValues] = useState<Record<string, unknown>>({});
@@ -176,10 +185,22 @@ export function useApiExplorerPayloadForm({
         setResponse({ status: res.status, data });
 
         if (res.ok) {
+          let jwtApplied = false;
+          if (applyJwtFromResponse && isLoginOperation(operation)) {
+            try {
+              const parsed = JSON.parse(text) as { token?: string };
+              if (typeof parsed?.token === "string" && parsed.token) {
+                setAuthToken(parsed.token);
+                jwtApplied = true;
+              }
+            } catch {
+              // ignore parse error
+            }
+          }
           toast.success(
-            `Request successful (${
-              res.status
-            }) - ${operation.method.toUpperCase()} ${path}`,
+            jwtApplied
+              ? `Request successful. JWT applied to Authorize.`
+              : `Request successful (${res.status}) - ${operation.method.toUpperCase()} ${path}`,
             { id: loadingToastId, duration: 3000 }
           );
         } else {
@@ -212,6 +233,8 @@ export function useApiExplorerPayloadForm({
       bodyKeys.length,
       bodyValues,
       authToken,
+      applyJwtFromResponse,
+      setAuthToken,
     ]
   );
 
