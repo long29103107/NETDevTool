@@ -1,15 +1,26 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>DevTool.UI</RootNamespace>
+
+    <!-- NuGet package -->
+    <IsPackable>true</IsPackable>
+    <PackageId>DevTool.UI</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>NETDevTool</Authors>
+    <Description>ASP.NET Core host and UI for the API Explorer dev tool. Serves a React SPA that loads OpenAPI/Swagger from your API, lets you try operations with JWT auth, path/query/body forms, and foreign-key dropdowns.</Description>
+    <PackageTags>aspnetcore;openapi;swagger;api-explorer;dev-tool;spa</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <Folder Include="Swagger\" />
     <Folder Include="wwwroot\dev-tool-ui\" />
+    <None Include="README.md" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
 
   <!-- Build frontend to dist, then copy bundle into DevTool.UI wwwroot/dev-tool-ui -->
@@ -26,6 +37,14 @@
       <DistFiles Include="$(FeProjectDir)dist\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(DistFiles)" DestinationFiles="@(DistFiles->'$(WwwRootDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Include built wwwroot/dev-tool-ui in the NuGet package (runs after Build so files exist) -->
+  <Target Name="IncludeWwwRootInPackage" AfterTargets="Build" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <_WwwRootFiles Include="$(MSBuildProjectDirectory)\wwwroot\dev-tool-ui\**\*" />
+      <None Include="@(_WwwRootFiles)" Pack="true" PackagePath="wwwroot\dev-tool-ui\%(RecursiveDir)%(Filename)%(Extension)" Visible="false" />
+    </ItemGroup>
   </Target>
 
 </Project>
