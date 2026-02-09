@@ -39,6 +39,14 @@
     <Copy SourceFiles="@(DistFiles)" DestinationFiles="@(DistFiles->'$(WwwRootDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
+  <!-- Copy wwwroot to output so hosts (e.g. DevTool.Mvc) and assembly-location fallback can find it -->
+  <Target Name="CopyWwwRootToOutput" AfterTargets="Build">
+    <ItemGroup>
+      <_WwwRootFilesToCopy Include="$(MSBuildProjectDirectory)\wwwroot\dev-tool-ui\**\*" Condition="Exists('$(MSBuildProjectDirectory)\wwwroot\dev-tool-ui')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_WwwRootFilesToCopy)" DestinationFiles="@(_WwwRootFilesToCopy->'$(OutputPath)wwwroot\dev-tool-ui\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
   <!-- Include built wwwroot/dev-tool-ui in the NuGet package (runs after Build so files exist) -->
   <Target Name="IncludeWwwRootInPackage" AfterTargets="Build" BeforeTargets="GenerateNuspec">
     <ItemGroup>

@@ -106,12 +106,16 @@ public static class SpaFallbackExtensions
     }
 
     /// <summary>
-    /// Resolves DevTool.UI project wwwroot path (e.g. ...\DevTool.UI\wwwroot) from this source file location.
+    /// Resolves DevTool.UI wwwroot path: first from source file location (when running from repo),
+    /// then from assembly location (when running from output or when consumed via NuGet).
     /// </summary>
     private static string GetDevToolProjectWwwRoot([CallerFilePath] string sourceFilePath = "")
     {
-        var middlewareDir = Path.GetDirectoryName(sourceFilePath) ?? "";
-        return Path.GetFullPath(Path.Combine(middlewareDir, "..", "wwwroot"));
+        var fromSource = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceFilePath) ?? "", "..", "wwwroot"));
+        if (Directory.Exists(fromSource))
+            return fromSource;
+        var assemblyDir = Path.GetDirectoryName(typeof(SpaFallbackExtensions).Assembly.Location) ?? "";
+        return Path.GetFullPath(Path.Combine(assemblyDir, "wwwroot"));
     }
 
     /// <summary>
