@@ -118,8 +118,18 @@ export function useApiExplorerPayloadForm({
       string,
       unknown
     >;
+    const isAuthLogin = operation.operationId === "Login" || operation.path.toLowerCase().includes("auth/login");
+    const isAuthRegister = operation.operationId === "Register" || operation.path.toLowerCase().includes("auth/register");
+    const authDefaults: Record<string, unknown> = {};
+    if (isAuthLogin || isAuthRegister) {
+      authDefaults.email = "long@gmail.com";
+      authDefaults.password = "123456";
+      if (isAuthRegister) authDefaults.name = "Long Nguyen";
+    }
     if (hasBodyInit && exampleBody) {
-      setBodyValues(exampleBody);
+      setBodyValues({ ...exampleBody, ...authDefaults });
+    } else if (Object.keys(authDefaults).length > 0) {
+      setBodyValues(authDefaults);
     } else {
       setBodyValues({});
     }

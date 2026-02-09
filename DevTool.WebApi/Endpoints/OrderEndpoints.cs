@@ -7,7 +7,7 @@ public static class OrderEndpoints
 {
     public static void MapOrderEndpoints(this IEndpointRouteBuilder routes)
     {
-        var group = routes.MapGroup("/api/orders").WithTags("Orders");
+        var group = routes.MapGroup("/api/orders").WithTags("Orders").RequireAuthorization();
 
         group.MapGet("/", async (IOrderService service, CancellationToken ct) =>
         {

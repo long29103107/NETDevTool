@@ -7,7 +7,7 @@ public static class ProductEndpoints
 {
     public static void MapProductEndpoints(this IEndpointRouteBuilder routes)
     {
-        var group = routes.MapGroup("/api/products").WithTags("Products");
+        var group = routes.MapGroup("/api/products").WithTags("Products").RequireAuthorization();
 
         group.MapGet("/", async (string? name, int? categoryId, decimal? minPrice, decimal? maxPrice, IProductService service, CancellationToken ct) =>
             {

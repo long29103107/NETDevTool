@@ -7,7 +7,7 @@ public static class InventoryEndpoints
 {
     public static void MapInventoryEndpoints(this IEndpointRouteBuilder routes)
     {
-        var group = routes.MapGroup("/api/inventory").WithTags("Inventory");
+        var group = routes.MapGroup("/api/inventory").WithTags("Inventory").RequireAuthorization();
 
         group.MapGet("/", async (IInventoryService service, CancellationToken ct) =>
         {
