@@ -212,11 +212,64 @@ See **DevTool.WebApi** and its DTOs for `[SwaggerSchema(Description = "Foreign k
 
 ---
 
+## Security (JWT authentication)
+
+If your API protects endpoints with JWT Bearer authentication, add the authentication package and configure it so the Explorer can send the token from the **Authorize** panel (and use “Apply JWT from response” after a login call).
+
+### 1. Add the package
+
+```bash
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
+```
+
+### 2. Configure JWT in `Program.cs`
+
+```csharp
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = "long.dev",
+            ValidAudience = "long.dev",
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes("super-secret-key-123"))
+        };
+    });
+
+builder.Services.AddAuthorization();
+```
+
+Use `appsettings.json` or User Secrets for issuer, audience, and signing key in real apps—do not hardcode secrets.
+
+### 3. Use auth in the pipeline
+
+Call these **before** `MapControllers()` or your endpoint mappings:
+
+```csharp
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapDevToolUi("/_devtool");
+app.MapControllers();
+```
+
+Then protect endpoints with `[Authorize]` (controllers) or `.RequireAuthorization()` (minimal API). In the Explorer, set the JWT in **Authorize**; it will be sent on subsequent requests.
+
+---
+
 ## Project layout (this repo)
 
 | Project | Description |
 |--------|-------------|
-| **Sample.Api** | Sample API using the **LonG.DevTool** NuGet package with both controllers and minimal API endpoints. |
 | **DevTool.WebApi** | Full sample with OpenAPI, JWT, EF Core, and dev tool integration (project reference). |
 | **DevTool.UI** | Source for the NuGet package: builds the React SPA and produces the `LonG.DevTool` package. |
 | **dev-tool-ui** | React (Bun + Tailwind) app: API Explorer UI source. |
