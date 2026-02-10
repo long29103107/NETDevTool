@@ -21,6 +21,8 @@ public static class HostingExtensions
             if (string.IsNullOrWhiteSpace(req.Prompt))
                 return Results.BadRequest("Prompt is required.");
 
+            var customMessage = MakeCustomMessage(req.Prompt);
+
             var settings = options.Value;
             if (settings is null || settings.IsEmpty )
                 return Results.Ok(new { content = string.Empty });
@@ -50,5 +52,10 @@ public static class HostingExtensions
             return Results.Ok(content);
         }).WithTags("Prompt");
         return app;
+    }
+
+    private static string MakeCustomMessage(string schema)
+    {
+        return $"Generate mock data. Rules: Output RAW JSON. No explanation. Replace all values. Keep keys & types. DO NOT wrap in markdown. DO NOT use ``` or ```json. Schema: {schema}";
     }
 }
