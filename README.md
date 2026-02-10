@@ -212,6 +212,48 @@ See **DevTool.WebApi** and its DTOs for `[SwaggerSchema(Description = "Foreign k
 
 ---
 
+### Optional: Quick fill request payloads (Hugging Face)
+
+You can let the Explorer **auto-generate request bodies** via a `/prompt` endpoint that calls an LLM hosted on [Hugging Face](https://huggingface.co/).
+
+1. **Configure Hugging Face** in your API (`appsettings.json` or user secrets):
+
+   ```json
+   "HuggingFace": {
+     "Url": "https://router.huggingface.co",
+     "ApiKey": "<your api key here>",
+     "Model": "meta-llama/Llama-3.1-8B-Instruct"
+   }
+   ```
+
+2. **Register the HttpClient and options** in `Program.cs` (host API):
+
+   ```csharp
+   using DevTool.UI.Extensions; // AddDevToolHttpClients, MapPromptEndpoint
+
+   var builder = WebApplication.CreateBuilder(args);
+
+   // ...
+   builder.Services.AddDevToolHttpClients(builder.Configuration);
+   // ...
+   var app = builder.Build();
+   ```
+
+3. **Map the `/prompt` endpoint**:
+
+   ```csharp
+   // after building 'app'
+   app.MapPromptEndpoint(); // POST /prompt
+   ```
+
+With this in place, the **Quick fill** button in the Request Body section:
+
+- Builds a JSON template from the operation’s OpenAPI schema
+- Sends it to `/prompt`, which calls your configured Hugging Face model
+- Parses the JSON response and uses it as the request payload
+
+---
+
 ## Security (JWT authentication)
 
 If your API protects endpoints with JWT Bearer authentication, add the authentication package and configure it so the Explorer can send the token from the **Authorize** panel (and use “Apply JWT from response” after a login call).

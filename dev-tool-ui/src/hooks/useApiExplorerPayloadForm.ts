@@ -324,10 +324,12 @@ export function useApiExplorerPayloadForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
-      const data = (await res.json()) as { content?: string }; // It just return json
-      const raw = typeof data === "string" ? (data as string) : "";
+      const data = (await res.json()) as { content?: string } | string;
+      const content =
+        typeof data === "string" ? data : (data?.content ?? "");
+      const raw = typeof content === "string" ? content.trim() : "";
       if (!raw) {
-        toast.error("Empty response from prompt", {
+        toast.error("Empty response from prompt (check HuggingFace settings)", {
           id: toastId,
           duration: 3000,
         });

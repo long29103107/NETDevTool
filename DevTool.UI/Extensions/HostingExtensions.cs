@@ -26,7 +26,7 @@ public static class HostingExtensions
 
             var settings = options.Value;
             if (settings is null || settings.IsEmpty )
-                return Results.Ok(new { content = string.Empty });
+                return Results.Ok(string.Empty);
 
             var model = settings.Model;
 
@@ -53,8 +53,7 @@ public static class HostingExtensions
                 .GetString();
 
             var result = ExtractFirstJson(content);
-            Console.WriteLine(result);
-            return Results.Ok(result);
+            return Results.Ok(result ?? string.Empty);
         }).WithTags("Prompt");
         return app;
     }
