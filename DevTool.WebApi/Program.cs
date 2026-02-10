@@ -1,4 +1,5 @@
 using System.Text;
+using DevTool.UI.Extensions;
 using DevTool.UI.Middleware;
 using DevTool.WebApi.Data;
 using DevTool.WebApi.Endpoints;
@@ -16,6 +17,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("DevToolDb"));
 
+builder.Services.AddDevToolHttpClients(builder.Configuration);
 builder.Services.AddSwaggerGen(c =>
 {
     c.EnableAnnotations();
@@ -120,6 +122,7 @@ app.MapProductEndpoints();
 app.MapCategoryEndpoints();
 app.MapInventoryEndpoints();
 app.MapOrderEndpoints();
+app.MapPromptEndpoint();
 
 app.MapDevToolUi("/_devtool");
 
