@@ -3,7 +3,7 @@ import { groupOperationsByTag } from "@/types/openapi";
 import { useApiExplorerStore } from "@/stores/apiExplorerStore";
 import ApiExplorerHeader from "@/modules/ApiExplorer/Header/ApiExplorerHeader";
 import ApiExplorerOperations from "@/modules/ApiExplorer/Operations/ApiExplorerOperations";
-import ApiExplorerGroup from "@/modules/ApiExplorer/Group/ApiExplorerGroup";
+import ApiExplorerGroup from "@/modules/ApiExplorer/group/ApiExplorerGroup";
 import ApiExplorerPayloadForm from "@/modules/ApiExplorer/PayloadForm/ApiExplorerPayloadForm";
 import { Button } from "@/components/Button";
 

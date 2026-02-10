@@ -5,6 +5,7 @@ import { useApiExplorerStore } from "@/stores/apiExplorerStore";
 import {
   buildExampleFromSchema,
   getRequestBodySchema,
+  getSchemaType,
   resolveSchema,
 } from "@/utils/openapiSchema";
 import { validateField } from "@/utils/validation";
@@ -23,6 +24,9 @@ export interface UseApiExplorerPayloadFormReturn {
   setQueryValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   bodyValues: Record<string, unknown>;
   updateBody: (key: string, value: unknown) => void;
+  quickFillBody: () => void;
+  quickFillViaPrompt: () => Promise<void>;
+  quickFillLoading: boolean;
   response: { status: number; data: string } | null;
   submitting: boolean;
   loadingData: boolean;
@@ -41,7 +45,10 @@ export interface UseApiExplorerPayloadFormReturn {
   isBodyValid: boolean;
 }
 
-function buildHeaders(hasBody: boolean, authToken: string | null): HeadersInit | undefined {
+function buildHeaders(
+  hasBody: boolean,
+  authToken: string | null,
+): HeadersInit | undefined {
   const headers: Record<string, string> = {};
   if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
   if (hasBody) headers["Content-Type"] = "application/json";
@@ -50,7 +57,10 @@ function buildHeaders(hasBody: boolean, authToken: string | null): HeadersInit |
 
 function isLoginOperation(operation: OperationInfo | null): boolean {
   if (!operation) return false;
-  return operation.operationId === "Login" || operation.path.toLowerCase().includes("auth/login");
+  return (
+    operation.operationId === "Login" ||
+    operation.path.toLowerCase().includes("auth/login")
+  );
 }
 
 export function useApiExplorerPayloadForm({
@@ -60,6 +70,7 @@ export function useApiExplorerPayloadForm({
 }: UseApiExplorerPayloadFormParams): UseApiExplorerPayloadFormReturn {
   const authToken = useApiExplorerStore((s) => s.authToken);
   const setAuthToken = useApiExplorerStore((s) => s.setAuthToken);
+  const setPromptPayload = useApiExplorerStore((s) => s.setPromptPayload);
   const [pathValues, setPathValues] = useState<Record<string, string>>({});
   const [queryValues, setQueryValues] = useState<Record<string, string>>({});
   const [bodyValues, setBodyValues] = useState<Record<string, unknown>>({});
@@ -69,9 +80,13 @@ export function useApiExplorerPayloadForm({
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
+  const [quickFillLoading, setQuickFillLoading] = useState(false);
+  const [quickFillSucceeded, setQuickFillSucceeded] = useState(false);
 
   // Path params are always required in OpenAPI; normalize so required is true unless explicitly false
-  const pathParams = (operation?.parameters.filter((p) => p.in === "path") ?? []).map((p) => ({
+  const pathParams = (
+    operation?.parameters.filter((p) => p.in === "path") ?? []
+  ).map((p) => ({
     ...p,
     required: p.required !== false,
   }));
@@ -95,7 +110,7 @@ export function useApiExplorerPayloadForm({
     if (!operation || !doc) return;
     const pathParamsInit = operation.parameters.filter((p) => p.in === "path");
     const queryParamsInit = operation.parameters.filter(
-      (p) => p.in === "query"
+      (p) => p.in === "query",
     );
     const schemaInit = getRequestBodySchema(operation, doc);
     const hasBodyInit =
@@ -118,8 +133,12 @@ export function useApiExplorerPayloadForm({
       string,
       unknown
     >;
-    const isAuthLogin = operation.operationId === "Login" || operation.path.toLowerCase().includes("auth/login");
-    const isAuthRegister = operation.operationId === "Register" || operation.path.toLowerCase().includes("auth/register");
+    const isAuthLogin =
+      operation.operationId === "Login" ||
+      operation.path.toLowerCase().includes("auth/login");
+    const isAuthRegister =
+      operation.operationId === "Register" ||
+      operation.path.toLowerCase().includes("auth/register");
     const authDefaults: Record<string, unknown> = {};
     if (isAuthLogin || isAuthRegister) {
       authDefaults.email = "long@gmail.com";
@@ -134,6 +153,7 @@ export function useApiExplorerPayloadForm({
       setBodyValues({});
     }
     setResponse(null);
+    setQuickFillSucceeded(false);
   }, [operation?.operationId, operation?.path, operation, doc]);
 
   const buildPath = useCallback((): string => {
@@ -148,13 +168,13 @@ export function useApiExplorerPayloadForm({
   const buildQuery = useCallback((): string => {
     const entries = queryParams
       .filter(
-        (q) => queryValues[q.name] !== undefined && queryValues[q.name] !== ""
+        (q) => queryValues[q.name] !== undefined && queryValues[q.name] !== "",
       )
       .map(
         (q) =>
           `${encodeURIComponent(q.name)}=${encodeURIComponent(
-            String(queryValues[q.name] ?? "")
-          )}`
+            String(queryValues[q.name] ?? ""),
+          )}`,
       );
     return entries.length ? `?${entries.join("&")}` : "";
   }, [queryParams, queryValues]);
@@ -181,7 +201,7 @@ export function useApiExplorerPayloadForm({
         };
 
         loadingToastId = toast.loading(
-          `Sending ${operation.method.toUpperCase()} request...`
+          `Sending ${operation.method.toUpperCase()} request...`,
         );
         const res = await fetch(url, opts);
         const text = await res.text();
@@ -211,14 +231,14 @@ export function useApiExplorerPayloadForm({
             jwtApplied
               ? `Request successful. JWT applied to Authorize.`
               : `Request successful (${res.status}) - ${operation.method.toUpperCase()} ${path}`,
-            { id: loadingToastId, duration: 3000 }
+            { id: loadingToastId, duration: 3000 },
           );
         } else {
           toast.error(
             `Request failed (${
               res.status
             }) - ${operation.method.toUpperCase()} ${path}`,
-            { id: loadingToastId, duration: 5000 }
+            { id: loadingToastId, duration: 5000 },
           );
         }
       } catch (err) {
@@ -245,12 +265,97 @@ export function useApiExplorerPayloadForm({
       authToken,
       applyJwtFromResponse,
       setAuthToken,
-    ]
+    ],
   );
 
   const updateBody = useCallback((key: string, value: unknown) => {
     setBodyValues((prev) => ({ ...prev, [key]: value }));
   }, []);
+
+  const quickFillBody = useCallback(() => {
+    if (!operation || !doc || !schema?.properties || !hasBody) return;
+    const exampleBody = buildExampleFromSchema(schema, doc) as Record<
+      string,
+      unknown
+    >;
+    const isAuthLogin =
+      operation.operationId === "Login" ||
+      operation.path.toLowerCase().includes("auth/login");
+    const isAuthRegister =
+      operation.operationId === "Register" ||
+      operation.path.toLowerCase().includes("auth/register");
+    const authDefaults: Record<string, unknown> = {};
+    if (isAuthLogin || isAuthRegister) {
+      authDefaults.email = "long@gmail.com";
+      authDefaults.password = "123456";
+      if (isAuthRegister) authDefaults.name = "Long Nguyen";
+    }
+    setBodyValues({ ...exampleBody, ...authDefaults });
+  }, [operation, doc, schema, hasBody]);
+
+  const promptUrl = `${window.location.origin.replace(/\/$/, "")}/prompt`;
+
+  const quickFillViaPrompt = useCallback(async (): Promise<void> => {
+    if (!operation || !doc || !schema?.properties || !hasBody) return;
+
+    // Build JSON template with placeholder values by schema type (e.g. {"id":0,"name":null,"email":null})
+    const template: Record<string, unknown> = {};
+    for (const k of bodyKeys) {
+      const prop = resolveSchema(
+        schema.properties![k] as SchemaObject | { $ref: string },
+        doc,
+      );
+      const type = getSchemaType(prop);
+      if (type === "integer" || type === "number") template[k] = 0;
+      else if (type === "boolean") template[k] = false;
+      else if (type === "array") template[k] = [];
+      else if (type === "object") template[k] = {};
+      else template[k] = null;
+    }
+    const prompt = `${JSON.stringify(template, null, 2)}`;
+    console.log("prompt", prompt);
+
+    setQuickFillLoading(true);
+    let toastId: string | number | undefined;
+    try {
+      toastId = toast.loading("Quick fill…");
+      const res = await fetch(promptUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = (await res.json()) as { content?: string }; // It just return json
+      const raw = typeof data === "string" ? (data as string) : "";
+      if (!raw) {
+        toast.error("Empty response from prompt", {
+          id: toastId,
+          duration: 3000,
+        });
+        return;
+      }
+      let parsed: Record<string, unknown>;
+      const codeBlock = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const toParse = (codeBlock?.[1]?.trim() ?? raw) || raw;
+      try {
+        parsed = JSON.parse(toParse) as Record<string, unknown>;
+      } catch {
+        toast.error("Response is not valid JSON", {
+          id: toastId,
+          duration: 3000,
+        });
+        return;
+      }
+      setPromptPayload(parsed);
+      setBodyValues(parsed);
+      setQuickFillSucceeded(true);
+      toast.success("Body filled from prompt", { id: toastId, duration: 2000 });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Quick fill failed";
+      toast.error(msg, { id: toastId, duration: 3000 });
+    } finally {
+      setQuickFillLoading(false);
+    }
+  }, [operation, doc, schema, hasBody, bodyKeys, promptUrl, setPromptPayload]);
 
   const canLoadData =
     !!operation &&
@@ -320,45 +425,72 @@ export function useApiExplorerPayloadForm({
     const query = buildQuery();
     const url = `${baseUrl}${path}${query}`;
     const method = operation.method.toUpperCase();
-    
+
     let curl = `curl -X ${method} "${url}"`;
-    
+
     // Headers
     if (authToken) {
       curl += ` \\\n  -H "Authorization: Bearer ${authToken.replace(/"/g, '\\"')}"`;
     }
     if (hasBody) {
-        curl += ` \\\n  -H "Content-Type: application/json"`;
+      curl += ` \\\n  -H "Content-Type: application/json"`;
     }
-    
+
     // Body
     if (hasBody && bodyKeys.length > 0) {
-        const body = JSON.stringify(bodyValues, null, 2);
-        // Escape single quotes for shell safety if needed, though simple JSON stringify is usually okay for basics.
-        // For better safety we might use single quotes for the body wrapper and escape single quotes inside.
-        curl += ` \\\n  -d '${JSON.stringify(bodyValues)}'`;
+      const body = JSON.stringify(bodyValues, null, 2);
+      // Escape single quotes for shell safety if needed, though simple JSON stringify is usually okay for basics.
+      // For better safety we might use single quotes for the body wrapper and escape single quotes inside.
+      curl += ` \\\n  -d '${JSON.stringify(bodyValues)}'`;
     }
-    
+
     return curl;
-  }, [operation, doc, baseUrl, buildPath, buildQuery, hasBody, bodyKeys, bodyValues, authToken]);
+  }, [
+    operation,
+    doc,
+    baseUrl,
+    buildPath,
+    buildQuery,
+    hasBody,
+    bodyKeys,
+    bodyValues,
+    authToken,
+  ]);
 
   // Path params are always required in OpenAPI; treat as required if not explicitly false
   const isPathValid = pathParams.every((p) => {
     const required = p.required !== false;
-    return !validateField(pathValues[p.name], p.schema as SchemaObject, required);
+    return !validateField(
+      pathValues[p.name],
+      p.schema as SchemaObject,
+      required,
+    );
   });
 
   const isQueryValid = queryParams.every((p) => {
-    return !validateField(queryValues[p.name], p.schema as SchemaObject, p.required);
+    return !validateField(
+      queryValues[p.name],
+      p.schema as SchemaObject,
+      p.required,
+    );
   });
 
   const isBodyValid = ((): boolean => {
     if (!hasBody || !schema?.properties) return true;
+    // After a successful Quick fill, always allow submit for the current body
+    if (quickFillSucceeded) return true;
     const required = schema.required ?? [];
     return Object.keys(schema.properties).every((key) => {
       const propSchemaOrRef = schema.properties![key];
-      const propSchema = resolveSchema(propSchemaOrRef, doc || ({} as any)) as SchemaObject;
-      return !validateField(bodyValues[key], propSchema, required.includes(key));
+      const propSchema = resolveSchema(
+        propSchemaOrRef,
+        doc || ({} as any),
+      ) as SchemaObject;
+      return !validateField(
+        bodyValues[key],
+        propSchema,
+        required.includes(key),
+      );
     });
   })();
 
@@ -369,6 +501,9 @@ export function useApiExplorerPayloadForm({
     setQueryValues,
     bodyValues,
     updateBody,
+    quickFillBody,
+    quickFillViaPrompt,
+    quickFillLoading,
     response,
     submitting,
     loadingData,

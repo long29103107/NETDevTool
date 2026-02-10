@@ -32,6 +32,8 @@ const ApiExplorerPayloadForm = ({
     setQueryValues,
     bodyValues,
     updateBody,
+    quickFillViaPrompt,
+    quickFillLoading,
     response,
     submitting,
     loadingData,
@@ -118,6 +120,8 @@ const ApiExplorerPayloadForm = ({
             }
             bodyValues={bodyValues}
             updateBody={updateBody}
+            onQuickFill={quickFillViaPrompt}
+            quickFillLoading={quickFillLoading}
           />
         </Section>
       )}
@@ -157,15 +161,20 @@ const ApiExplorerPayloadForm = ({
 
 const Section = ({
   label,
+  action,
   children,
 }: {
   label: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) => (
   <div className="space-y-3 p-4 rounded-lg border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.02)]">
-    <h3 className="text-xs font-semibold uppercase tracking-wider text-[rgba(255,255,255,0.4)]">
-      {label}
-    </h3>
+    <div className="flex items-center justify-between gap-2">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-[rgba(255,255,255,0.4)]">
+        {label}
+      </h3>
+      {action}
+    </div>
     {children}
   </div>
 );

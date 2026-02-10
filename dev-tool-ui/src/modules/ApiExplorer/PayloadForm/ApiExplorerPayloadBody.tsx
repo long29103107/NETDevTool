@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Label } from "@/components/Label";
 import { Select } from "@/components/Select";
@@ -17,6 +18,8 @@ export interface ApiExplorerPayloadBodyProps {
   };
   bodyValues: Record<string, unknown>;
   updateBody: (key: string, value: unknown) => void;
+  onQuickFill?: () => void | Promise<void>;
+  quickFillLoading?: boolean;
 }
 
 const ApiExplorerPayloadBody = ({
@@ -24,11 +27,25 @@ const ApiExplorerPayloadBody = ({
   schema,
   bodyValues,
   updateBody,
+  onQuickFill,
+  quickFillLoading = false,
 }: ApiExplorerPayloadBodyProps) => {
   const bodyKeys = Object.keys(schema.properties);
 
   return (
     <section>
+      <div className="flex justify-end mb-3">
+        {onQuickFill && (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={quickFillLoading}
+            onClick={() => void onQuickFill()}
+          >
+            {quickFillLoading ? "Filling…" : "Quick fill"}
+          </Button>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-2">
         {bodyKeys.map((key) => {
           const prop = resolveSchema(

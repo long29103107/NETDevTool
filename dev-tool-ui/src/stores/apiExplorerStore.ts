@@ -27,6 +27,9 @@ interface ApiExplorerState {
   // Auth (JWT)
   authToken: string | null;
 
+  // Last /prompt response body (for filling payload)
+  promptPayload: Record<string, unknown> | null;
+
   // Actions
   initializeDoc: () => void;
   replaceWithUrl: (url: string) => Promise<void>;
@@ -36,6 +39,7 @@ interface ApiExplorerState {
   setContentHeight: (height: number | null) => void;
   setSwaggerUrl: (url: string) => void;
   setAuthToken: (token: string | null) => void;
+  setPromptPayload: (payload: Record<string, unknown> | null) => void;
   updateGroups: () => void;
 }
 
@@ -51,6 +55,7 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
   swaggerUrl: "",
   isLoadingUrl: false,
   authToken: null,
+  promptPayload: null,
 
   // Initialize doc from API
   initializeDoc: () => {
@@ -146,5 +151,9 @@ export const useApiExplorerStore = create<ApiExplorerState>((set, get) => ({
 
   setAuthToken: (token: string | null) => {
     set({ authToken: token && token.trim() ? token.trim() : null });
+  },
+
+  setPromptPayload: (payload: Record<string, unknown> | null) => {
+    set({ promptPayload: payload });
   },
 }));
